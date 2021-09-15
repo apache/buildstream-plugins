@@ -353,6 +353,9 @@ class CargoSource(Source):
 
         node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir"])
 
+        # Needs to be marked here so that `track` can translate it later.
+        self.mark_download_url(self.url)
+
         self.crates = self._parse_crates(self.ref)
 
     def preflight(self):
