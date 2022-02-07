@@ -408,13 +408,16 @@ class CargoSource(Source):
         for package in lock["package"]:
             if "source" not in package:
                 continue
-            new_ref += [{"name": package["name"], "version": str(package["version"])}]
+            new_ref += [{"name": package["name"], "version": str(package["version"]), "sha": package.get("checksum")}]
 
         # Make sure the order we set it at track time is deterministic
         new_ref = sorted(new_ref, key=lambda c: (c["name"], c["version"]))
 
         # Download the crates and get their shas
         for crate_obj in new_ref:
+            if crate_obj["sha"] is not None:
+                continue
+
             crate = Crate(self, crate_obj["name"], crate_obj["version"])
 
             crate_url = crate._get_url()
