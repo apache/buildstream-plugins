@@ -1,0 +1,8 @@
+# The dependencies listed here are necessary for specifc plugins, but
+# aren't required for buildstream-plugins to be installed.
+
+# Cargo source
+toml
+
+# Docker source
+requests
