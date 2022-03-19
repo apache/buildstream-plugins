@@ -1,0 +1,3 @@
+global-include *.yaml
+include requirements/*
+include project.conf
