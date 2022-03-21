@@ -1,0 +1,26 @@
+[build-system]
+requires = [
+    # We need at least version 36.6.0 that introduced "build_meta"
+    "setuptools>=36.6.0",
+    # In order to build wheels, and as required by PEP 517
+    "wheel",
+    "Cython"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 119
+exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.mypy_cache
+    | \.tox
+    | _build
+    | build
+    | dist
+  )/
+  | src/buildstream/_protos
+)
+'''
