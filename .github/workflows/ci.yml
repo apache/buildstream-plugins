@@ -1,0 +1,81 @@
+name: PR Checks
+
+# Pre-merge CI to run on push and pull_request events, even if this seems
+# redundant, we avoid concurrency with the below configuration.
+#
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Use the concurrency feature to ensure we don't run redundant workflows
+#
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+# Left to-do:
+# - coverage
+# - publishing docs to gh-pages
+# - persistent artifact cache
+# - overnight jobs
+# - wsl tasks (TODO: Check if GitHub's Windows runners allow WSL)
+#
+# New opportunities:
+# - run tests on mac (GitHub provides MacOS runners)
+# - standardize WSL tasks by using GitHub-provided runners
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.allow-failure || false }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+
+        # The names here should map to a valid service defined in
+        # "../compose/ci.docker-compose.yml"
+        test-name:
+          - debian-10
+          - fedora-34
+          - fedora-35
+          - fedora-missing-deps
+          - lint
+          - mypy
+
+        include:
+          - test-name: bst-master
+            allow-failure: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+        # BuildStream requires tags to be able to find its version.
+        with:
+          fetch-depth: 0
+
+      - name: Run tests with Docker Compose
+        run: |
+          ${GITHUB_WORKSPACE}/.github/run-ci.sh ${{ matrix.test-name }}
+
+  docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+        # BuildStream requires tags to be able to find its version.
+        with:
+          fetch-depth: 0
+
+      - name: Give `testuser` ownership of the source directory
+        run: sudo chown -R 1000:1000 ${GITHUB_WORKSPACE}
+
+      - name: Build documentation using Docker Compose
+        run: |
+          ${GITHUB_WORKSPACE}/.github/run-ci.sh docs
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: doc/build/html
