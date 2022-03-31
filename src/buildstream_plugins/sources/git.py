@@ -226,7 +226,8 @@ class GitMirror(SourceFetcher):
         if not os.path.exists(self.mirror):
             with self.source.tempdir() as tmpdir:
                 self.source.call(
-                    [self.source.host_git, "init", "--bare", tmpdir], fail="Failed to initialise repository",
+                    [self.source.host_git, "init", "--bare", tmpdir],
+                    fail="Failed to initialise repository",
                 )
 
                 try:
@@ -374,7 +375,15 @@ class GitMirror(SourceFetcher):
     #
     def describe(self, rev):
         _, output = self.source.check_output(
-            [self.source.host_git, "describe", "--tags", "--abbrev=40", "--long", "--always", rev,],
+            [
+                self.source.host_git,
+                "describe",
+                "--tags",
+                "--abbrev=40",
+                "--long",
+                "--always",
+                rev,
+            ],
             fail="Unable to find revision {}".format(rev),
             cwd=self.mirror,
         )
@@ -400,7 +409,14 @@ class GitMirror(SourceFetcher):
             ["--tags", "--first-parent"],
         ]:
             exit_code, output = self.source.check_output(
-                [self.source.host_git, "describe", "--abbrev=0", rev, *options,], cwd=self.mirror,
+                [
+                    self.source.host_git,
+                    "describe",
+                    "--abbrev=0",
+                    rev,
+                    *options,
+                ],
+                cwd=self.mirror,
             )
             if exit_code == 0:
                 tag = output.strip()
@@ -409,7 +425,10 @@ class GitMirror(SourceFetcher):
                     fail="Unable to resolve tag '{}'".format(tag),
                     cwd=self.mirror,
                 )
-                exit_code = self.source.call([self.source.host_git, "cat-file", "tag", tag], cwd=self.mirror,)
+                exit_code = self.source.call(
+                    [self.source.host_git, "cat-file", "tag", tag],
+                    cwd=self.mirror,
+                )
                 annotated = exit_code == 0
 
                 tags.add((tag, commit_ref.strip(), annotated))
@@ -423,7 +442,14 @@ class GitMirror(SourceFetcher):
         # case we're just checking out a specific commit and then removing the .git/
         # directory.
         self.source.call(
-            [self.source.host_git, "clone", "--no-checkout", "--shared", self.mirror, fullpath,],
+            [
+                self.source.host_git,
+                "clone",
+                "--no-checkout",
+                "--shared",
+                self.mirror,
+                fullpath,
+            ],
             fail="Failed to create git mirror {} in directory: {}".format(self.mirror, fullpath),
             fail_temporarily=True,
         )
@@ -444,7 +470,13 @@ class GitMirror(SourceFetcher):
         url = self.source.translate_url(self.url)
 
         self.source.call(
-            [self.source.host_git, "clone", "--no-checkout", self.mirror, fullpath,],
+            [
+                self.source.host_git,
+                "clone",
+                "--no-checkout",
+                self.mirror,
+                fullpath,
+            ],
             fail="Failed to clone git mirror {} in directory: {}".format(self.mirror, fullpath),
             fail_temporarily=True,
         )
@@ -596,13 +628,24 @@ class GitMirror(SourceFetcher):
                     )
                     commit_file.seek(0, 0)
                     self.source.call(
-                        [self.source.host_git, "hash-object", "-w", "-t", "commit", "--stdin",],
+                        [
+                            self.source.host_git,
+                            "hash-object",
+                            "-w",
+                            "-t",
+                            "commit",
+                            "--stdin",
+                        ],
                         stdin=commit_file,
                         fail="Failed to add commit object {}".format(rev),
                         cwd=fullpath,
                     )
 
-            with open(os.path.join(fullpath, ".git", "shallow"), "w", encoding="utf-8",) as shallow_file:
+            with open(
+                os.path.join(fullpath, ".git", "shallow"),
+                "w",
+                encoding="utf-8",
+            ) as shallow_file:
                 for rev in shallow:
                     shallow_file.write("{}\n".format(rev))
 
@@ -613,7 +656,14 @@ class GitMirror(SourceFetcher):
                         tag_file.write(tag_data.encode("ascii"))
                         tag_file.seek(0, 0)
                         _, tag_ref = self.source.check_output(
-                            [self.source.host_git, "hash-object", "-w", "-t", "tag", "--stdin",],
+                            [
+                                self.source.host_git,
+                                "hash-object",
+                                "-w",
+                                "-t",
+                                "tag",
+                                "--stdin",
+                            ],
                             stdin=tag_file,
                             fail="Failed to add tag object {}".format(tag),
                             cwd=fullpath,
@@ -677,7 +727,8 @@ class GitSource(Source):
         # If it is missing both then we will be unable to track or build.
         if self.mirror.ref is None and self.tracking is None:
             raise SourceError(
-                "{}: Git sources require a ref and/or track".format(self), reason="missing-track-and-ref",
+                "{}: Git sources require a ref and/or track".format(self),
+                reason="missing-track-and-ref",
             )
 
         self.checkout_submodules = node.get_bool("checkout-submodules", default=True)
@@ -791,14 +842,17 @@ class GitSource(Source):
             if self.mirror.ref is None:
                 detail = "Without a tracking branch ref can not be updated. Please " + "provide a ref or a track."
                 raise SourceError(
-                    "{}: No track or ref".format(self), detail=detail, reason="track-attempt-no-track",
+                    "{}: No track or ref".format(self),
+                    detail=detail,
+                    reason="track-attempt-no-track",
                 )
             return None
 
         # Resolve the URL for the message
         resolved_url = self.translate_url(self.mirror.url)
         with self.timed_activity(
-            "Tracking {} from {}".format(self.tracking, resolved_url), silent_nested=True,
+            "Tracking {} from {}".format(self.tracking, resolved_url),
+            silent_nested=True,
         ):
             self.mirror._fetch(resolved_url, fetch_all=True)
 
@@ -884,14 +938,28 @@ class GitSource(Source):
         ref_in_track = False
         if not re.match(EXACT_TAG_PATTERN, self.mirror.ref) and self.tracking:
             _, branch = self.check_output(
-                [self.host_git, "branch", "--list", self.tracking, "--contains", self.mirror.ref,],
+                [
+                    self.host_git,
+                    "branch",
+                    "--list",
+                    self.tracking,
+                    "--contains",
+                    self.mirror.ref,
+                ],
                 cwd=self.mirror.mirror,
             )
             if branch:
                 ref_in_track = True
             else:
                 _, tag = self.check_output(
-                    [self.host_git, "tag", "--list", self.tracking, "--contains", self.mirror.ref,],
+                    [
+                        self.host_git,
+                        "tag",
+                        "--list",
+                        self.tracking,
+                        "--contains",
+                        self.mirror.ref,
+                    ],
                     cwd=self.mirror.mirror,
                 )
                 if tag:

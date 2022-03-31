@@ -207,7 +207,11 @@ class DockerRegistryV2Client:
     # Returns:
     #    (str, str): A tuple of the manifest content as text, and its content hash
     def manifest(
-        self, image_path, reference, architecture=default_architecture(), os_=default_os(),
+        self,
+        image_path,
+        reference,
+        architecture=default_architecture(),
+        os_=default_os(),
     ):
         # pylint: disable=too-many-locals
 
@@ -223,7 +227,8 @@ class DockerRegistryV2Client:
             manifest = json.loads(response.text)
         except json.JSONDecodeError as e:
             raise DockerManifestError(
-                "Server did not return a valid manifest: {}".format(e), manifest=response.text,
+                "Server did not return a valid manifest: {}".format(e),
+                manifest=response.text,
             ) from e
 
         schema_version = manifest.get("schemaVersion")
@@ -231,7 +236,8 @@ class DockerRegistryV2Client:
             raise DockerManifestError("Schema version 1 is unsupported.", manifest=response.text)
         if schema_version is None:
             raise DockerManifestError(
-                "Manifest did not include the schemaVersion key.", manifest=response.text,
+                "Manifest did not include the schemaVersion key.",
+                manifest=response.text,
             )
 
         our_digest = self.digest(response.text.encode("utf8"))
@@ -239,7 +245,8 @@ class DockerRegistryV2Client:
 
         if not their_digest:
             raise DockerManifestError(
-                "Server did not set the Docker-Content-Digest header.", manifest=response.text,
+                "Server did not set the Docker-Content-Digest header.",
+                manifest=response.text,
             )
         if our_digest != their_digest:
             raise DockerManifestError(
@@ -254,16 +261,23 @@ class DockerRegistryV2Client:
             for sub in manifest["manifests"]:
                 if sub["platform"]["architecture"] == architecture and sub["platform"]["os"]:
                     sub_digest = sub["digest"]
-                    return self.manifest(image_path, sub_digest, architecture=architecture, os_=os_,)
+                    return self.manifest(
+                        image_path,
+                        sub_digest,
+                        architecture=architecture,
+                        os_=os_,
+                    )
                 else:
                     raise DockerManifestError(
-                        "No images found for architecture {}, OS {}".format(architecture, os_), manifest=response.text,
+                        "No images found for architecture {}, OS {}".format(architecture, os_),
+                        manifest=response.text,
                     )
         elif manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
             return response.text, our_digest
         else:
             raise DockerManifestError(
-                "Unsupported manifest type {}".format(manifest["mediaType"]), manifest=response.text,
+                "Unsupported manifest type {}".format(manifest["mediaType"]),
+                manifest=response.text,
             )
 
     # blob():
@@ -440,7 +454,8 @@ class DockerSource(Source):
         # pylint: disable=arguments-differ
 
         with self.timed_activity(
-            "Fetching image {}:{} with digest {}".format(self.image, self.tag, self.digest), silent_nested=True,
+            "Fetching image {}:{} with digest {}".format(self.image, self.tag, self.digest),
+            silent_nested=True,
         ):
             with self.tempdir() as tmpdir:
                 # move all files to a tmpdir
@@ -487,7 +502,8 @@ class DockerSource(Source):
                 # a flat mirror directory. We check one-by-one if there is any need to copy a file out of the tmpdir.
                 for fetched_file in os.listdir(tmpdir):
                     move_atomic(
-                        os.path.join(tmpdir, fetched_file), os.path.join(self.get_mirror_directory(), fetched_file),
+                        os.path.join(tmpdir, fetched_file),
+                        os.path.join(self.get_mirror_directory(), fetched_file),
                     )
 
     def stage(self, directory):
@@ -504,7 +520,10 @@ class DockerSource(Source):
                 blob_path = os.path.join(mirror_dir, layer_digest + ".tar.gz")
 
                 self._verify_blob(blob_path, expected_digest=layer_digest)
-                (extract_fileset, white_out_fileset,) = self._get_extract_and_remove_files(blob_path)
+                (
+                    extract_fileset,
+                    white_out_fileset,
+                ) = self._get_extract_and_remove_files(blob_path)
 
                 # remove files associated with whiteouts
                 for white_out_file in white_out_fileset:

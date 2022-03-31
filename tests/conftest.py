@@ -11,7 +11,10 @@ from .testutils.repo import Bzr, Git
 #################################################
 def pytest_addoption(parser):
     parser.addoption(
-        "--integration", action="store_true", default=False, help="Run integration tests",
+        "--integration",
+        action="store_true",
+        default=False,
+        help="Run integration tests",
     )
 
 

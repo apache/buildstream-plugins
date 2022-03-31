@@ -100,7 +100,13 @@ class BzrSource(Source):
         with self.timed_activity("Tracking {}".format(self.url), silent_nested=True), self._locked():
             self._ensure_mirror(skip_ref_check=True)
             ret, out = self.check_output(
-                [self.host_bzr, "version-info", "--custom", "--template={revno}", self._get_branch_dir(),],
+                [
+                    self.host_bzr,
+                    "version-info",
+                    "--custom",
+                    "--template={revno}",
+                    self._get_branch_dir(),
+                ],
                 fail="Failed to read the revision number at '{}'".format(self._get_branch_dir()),
             )
             if ret != 0:
@@ -148,7 +154,12 @@ class BzrSource(Source):
             )
             # Switch the parent branch to the source's origin
             self.call(
-                [self.host_bzr, "switch", "--directory={}".format(directory), url,],
+                [
+                    self.host_bzr,
+                    "switch",
+                    "--directory={}".format(directory),
+                    url,
+                ],
                 fail="Failed to switch workspace's parent branch to {}".format(url),
             )
 
@@ -175,21 +186,33 @@ class BzrSource(Source):
             return False
 
         return (
-            self.call([self.host_bzr, "revno", "--revision=revno:{}".format(self.ref), self._get_branch_dir(),]) == 0
+            self.call(
+                [
+                    self.host_bzr,
+                    "revno",
+                    "--revision=revno:{}".format(self.ref),
+                    self._get_branch_dir(),
+                ]
+            )
+            == 0
         )
 
     def _get_branch_dir(self):
         return os.path.join(self._get_mirror_dir(), self.tracking)
 
     def _get_mirror_dir(self):
-        return os.path.join(self.get_mirror_directory(), utils.url_directory_name(self.original_url),)
+        return os.path.join(
+            self.get_mirror_directory(),
+            utils.url_directory_name(self.original_url),
+        )
 
     def _ensure_mirror(self, skip_ref_check=False):
         mirror_dir = self._get_mirror_dir()
         bzr_metadata_dir = os.path.join(mirror_dir, ".bzr")
         if not os.path.exists(bzr_metadata_dir):
             self.call(
-                [self.host_bzr, "init-repo", "--no-trees", mirror_dir], fail="Failed to initialize bzr repository",
+                [self.host_bzr, "init-repo", "--no-trees", mirror_dir],
+                fail="Failed to initialize bzr repository",
             )
 
         branch_dir = os.path.join(mirror_dir, self.tracking)
@@ -206,13 +229,19 @@ class BzrSource(Source):
             # `bzr pull` the branch if it does exist
             # to get any changes to the upstream code
             self.call(
-                [self.host_bzr, "pull", "--directory={}".format(branch_dir), branch_url,],
+                [
+                    self.host_bzr,
+                    "pull",
+                    "--directory={}".format(branch_dir),
+                    branch_url,
+                ],
                 fail="Failed to pull new changes for {}".format(branch_dir),
             )
 
         if not skip_ref_check and not self._check_ref():
             raise SourceError(
-                "Failed to ensure ref '{}' was mirrored".format(self.ref), reason="ref-not-mirrored",
+                "Failed to ensure ref '{}' was mirrored".format(self.ref),
+                reason="ref-not-mirrored",
             )
 
 

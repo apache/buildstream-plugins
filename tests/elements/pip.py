@@ -42,18 +42,29 @@ def test_pip_build(cli, datafiles):
         ],
     }
     os.makedirs(
-        os.path.dirname(os.path.join(element_path, element_name)), exist_ok=True,
+        os.path.dirname(os.path.join(element_path, element_name)),
+        exist_ok=True,
     )
     _yaml.roundtrip_dump(element, os.path.join(element_path, element_name))
 
     result = cli.run(project=project, args=["build", element_name])
     assert result.exit_code == 0
 
-    result = cli.run(project=project, args=["artifact", "checkout", element_name, "--directory", checkout],)
+    result = cli.run(
+        project=project,
+        args=["artifact", "checkout", element_name, "--directory", checkout],
+    )
     assert result.exit_code == 0
 
     assert_contains(
-        checkout, ["/usr", "/usr/lib", "/usr/bin", "/usr/bin/hello", "/usr/lib/python3.6",],
+        checkout,
+        [
+            "/usr",
+            "/usr/lib",
+            "/usr/bin",
+            "/usr/bin/hello",
+            "/usr/lib/python3.6",
+        ],
     )
 
 
@@ -96,7 +107,8 @@ def test_pip_element_should_install_pip_deps(cli, datafiles, setup_pypi_repo):
     pypi_repo = os.path.join(project, "files", "pypi-repo")
     os.makedirs(pypi_repo, exist_ok=True)
     os.makedirs(
-        os.path.dirname(os.path.join(elements_path, element_name)), exist_ok=True,
+        os.path.dirname(os.path.join(elements_path, element_name)),
+        exist_ok=True,
     )
     setup_pypi_repo(mock_packages, pypi_repo)
 
@@ -112,7 +124,11 @@ def test_pip_element_should_install_pip_deps(cli, datafiles, setup_pypi_repo):
                 # FIXME: remove hardcoded ref once issue #1010 is closed
                 "ref": "ad96570b552498807abec33c06210bf68378d854ced6753b77916c5ed517610d",
             },
-            {"kind": "pip", "url": "file://{}".format(os.path.realpath(pypi_repo)), "packages": [myreqs_packages],},
+            {
+                "kind": "pip",
+                "url": "file://{}".format(os.path.realpath(pypi_repo)),
+                "packages": [myreqs_packages],
+            },
         ],
     }
     _yaml.roundtrip_dump(element, os.path.join(elements_path, element_name))

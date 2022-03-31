@@ -30,7 +30,9 @@ class Bzr(Repo):
         self.copy_directory(directory, branch_dir)
         subprocess.call([self.bzr, "add", "."], env=self.env, cwd=branch_dir)
         subprocess.call(
-            [self.bzr, "commit", '--message="Initial commit"'], env=self.env, cwd=branch_dir,
+            [self.bzr, "commit", '--message="Initial commit"'],
+            env=self.env,
+            cwd=branch_dir,
         )
 
         return self.latest_commit()
@@ -48,7 +50,13 @@ class Bzr(Repo):
 
     def latest_commit(self):
         return subprocess.check_output(
-            [self.bzr, "version-info", "--custom", "--template={revno}", os.path.join(self.repo, "trunk"),],
+            [
+                self.bzr,
+                "version-info",
+                "--custom",
+                "--template={revno}",
+                os.path.join(self.repo, "trunk"),
+            ],
             env=self.env,
             universal_newlines=True,
         ).strip()

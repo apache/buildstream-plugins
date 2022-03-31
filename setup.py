@@ -31,7 +31,10 @@ except ImportError:
 ###############################################################################
 #                             Parse README                                    #
 ###############################################################################
-with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.rst"), encoding="utf-8",) as readme:
+with open(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.rst"),
+    encoding="utf-8",
+) as readme:
     long_description = readme.read()
 
 
@@ -57,7 +60,9 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     license="Apache License Version 2.0",
     url="https://buildstream.build",
-    project_urls={"Documentation": "https://docs.buildstream.build/",},
+    project_urls={
+        "Documentation": "https://docs.buildstream.build/",
+    },
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     include_package_data=True,
@@ -80,7 +85,9 @@ setup(
             "zip = buildstream_plugins.sources.zip",
         ],
     },
-    extras_require={"cargo": ["toml"],},
+    extras_require={
+        "cargo": ["toml"],
+    },
     zip_safe=False,
 )
 # eof setup()

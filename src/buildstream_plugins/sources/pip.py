@@ -92,7 +92,10 @@ _PYTHON_VERSIONS = [
 # https://docs.python.org/3/distutils/sourcedist.html.
 # Names of source distribution archives must be of the form
 # '%{package-name}-%{version}.%{extension}'.
-_SDIST_RE = re.compile(r"^([\w.-]+?)-((?:[\d.]+){2,})\.(?:tar|tar.bz2|tar.gz|tar.xz|tar.Z|zip)$", re.IGNORECASE,)
+_SDIST_RE = re.compile(
+    r"^([\w.-]+?)-((?:[\d.]+){2,})\.(?:tar|tar.bz2|tar.gz|tar.xz|tar.Z|zip)$",
+    re.IGNORECASE,
+)
 
 
 class PipSource(Source):

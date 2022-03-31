@@ -234,10 +234,20 @@ class Crate(SourceFetcher):
                 # Because we use etag only for matching sha, currently specified sha is what
                 # we would have downloaded.
                 return self.sha
-            raise SourceError("{}: Error mirroring {}: {}".format(self, url, e), temporary=True,) from e
+            raise SourceError(
+                "{}: Error mirroring {}: {}".format(self, url, e),
+                temporary=True,
+            ) from e
 
-        except (urllib.error.URLError, urllib.error.ContentTooShortError, OSError,) as e:
-            raise SourceError("{}: Error mirroring {}: {}".format(self, url, e), temporary=True,) from e
+        except (
+            urllib.error.URLError,
+            urllib.error.ContentTooShortError,
+            OSError,
+        ) as e:
+            raise SourceError(
+                "{}: Error mirroring {}: {}".format(self, url, e),
+                temporary=True,
+            ) from e
 
     # _get_url()
     #
@@ -292,7 +302,10 @@ class Crate(SourceFetcher):
     #
     def _get_mirror_dir(self):
         return os.path.join(
-            self.cargo.get_mirror_directory(), utils.url_directory_name(self.cargo.url), self.name, self.version,
+            self.cargo.get_mirror_directory(),
+            utils.url_directory_name(self.cargo.url),
+            self.name,
+            self.version,
         )
 
     # _get_mirror_file()
@@ -365,7 +378,8 @@ class CargoSource(Source):
                     lock = toml.load(f)
                 except toml.TomlDecodeError as e:
                     raise SourceError(
-                        "Malformed Cargo.lock file at: {}".format(self.cargo_lock), detail="{}".format(e),
+                        "Malformed Cargo.lock file at: {}".format(self.cargo_lock),
+                        detail="{}".format(e),
                     ) from e
         except FileNotFoundError as e:
             raise SourceError(
@@ -435,7 +449,15 @@ class CargoSource(Source):
         if refs is None:
             return []
 
-        return [Crate(self, crate["name"], crate["version"], sha=crate.get("sha", None),) for crate in refs]
+        return [
+            Crate(
+                self,
+                crate["name"],
+                crate["version"],
+                sha=crate.get("sha", None),
+            )
+            for crate in refs
+        ]
 
 
 def setup():
