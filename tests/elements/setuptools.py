@@ -25,7 +25,10 @@ def test_setuptools_build(cli, datafiles):
     result = cli.run(project=project, args=["build", element_name])
     assert result.exit_code == 0
 
-    result = cli.run(project=project, args=["artifact", "checkout", element_name, "--directory", checkout],)
+    result = cli.run(
+        project=project,
+        args=["artifact", "checkout", element_name, "--directory", checkout],
+    )
     assert result.exit_code == 0
 
     assert_contains(checkout, ["/usr", "/usr/bin", "/usr/bin/hello"])

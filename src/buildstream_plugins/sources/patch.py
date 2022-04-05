@@ -95,12 +95,20 @@ class PatchSource(Source):
             # Bail out with a comprehensive message if the target directory is empty
             if not os.listdir(directory):
                 raise SourceError(
-                    "Nothing to patch in directory '{}'".format(directory), reason="patch-no-files",
+                    "Nothing to patch in directory '{}'".format(directory),
+                    reason="patch-no-files",
                 )
 
             strip_level_option = "-p{}".format(self.strip_level)
             self.call(
-                [self.host_patch, strip_level_option, "-i", self.fullpath, "-d", directory,],
+                [
+                    self.host_patch,
+                    strip_level_option,
+                    "-i",
+                    self.fullpath,
+                    "-d",
+                    directory,
+                ],
                 fail="Failed to apply patch {}".format(self.path),
             )
 

@@ -49,11 +49,16 @@ def test_pip_source_import_packages(cli, datafiles, setup_pypi_repo):
         "kind": "import",
         "sources": [
             {"kind": "local", "path": "files/pip-source"},
-            {"kind": "pip", "url": "file://{}".format(os.path.realpath(pypi_repo)), "packages": [myreqs_packages],},
+            {
+                "kind": "pip",
+                "url": "file://{}".format(os.path.realpath(pypi_repo)),
+                "packages": [myreqs_packages],
+            },
         ],
     }
     os.makedirs(
-        os.path.dirname(os.path.join(element_path, element_name)), exist_ok=True,
+        os.path.dirname(os.path.join(element_path, element_name)),
+        exist_ok=True,
     )
     _yaml.roundtrip_dump(element, os.path.join(element_path, element_name))
 
@@ -63,7 +68,10 @@ def test_pip_source_import_packages(cli, datafiles, setup_pypi_repo):
     result = cli.run(project=project, args=["build", element_name])
     assert result.exit_code == 0
 
-    result = cli.run(project=project, args=["artifact", "checkout", element_name, "--directory", checkout],)
+    result = cli.run(
+        project=project,
+        args=["artifact", "checkout", element_name, "--directory", checkout],
+    )
     assert result.exit_code == 0
 
     assert_contains(
@@ -119,7 +127,8 @@ def test_pip_source_import_requirements_files(cli, datafiles, setup_pypi_repo):
         ],
     }
     os.makedirs(
-        os.path.dirname(os.path.join(element_path, element_name)), exist_ok=True,
+        os.path.dirname(os.path.join(element_path, element_name)),
+        exist_ok=True,
     )
     _yaml.roundtrip_dump(element, os.path.join(element_path, element_name))
 
@@ -129,7 +138,10 @@ def test_pip_source_import_requirements_files(cli, datafiles, setup_pypi_repo):
     result = cli.run(project=project, args=["build", element_name])
     assert result.exit_code == 0
 
-    result = cli.run(project=project, args=["artifact", "checkout", element_name, "--directory", checkout],)
+    result = cli.run(
+        project=project,
+        args=["artifact", "checkout", element_name, "--directory", checkout],
+    )
     assert result.exit_code == 0
 
     assert_contains(
@@ -193,7 +205,8 @@ def test_pip_source_build(cli, datafiles, setup_pypi_repo):
         },
     }
     os.makedirs(
-        os.path.dirname(os.path.join(element_path, element_name)), exist_ok=True,
+        os.path.dirname(os.path.join(element_path, element_name)),
+        exist_ok=True,
     )
     _yaml.roundtrip_dump(element, os.path.join(element_path, element_name))
 
