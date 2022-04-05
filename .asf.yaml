@@ -1,0 +1,38 @@
+#
+# Avoid diluting the dev mailing list with meta stuff,
+# redirect it all to the commit list.
+#
+notifications:
+  commits: commits@buildstream.apache.org
+  issues: commits@buildstream.apache.org
+  pullrequests: commits@buildstream.apache.org
+
+#
+# Configure github
+#
+github:
+
+  description: "BuildStream plugins"
+  homepage: https://buildstream.build/
+
+  # Main features
+  features:
+    # Enable wiki for documentation
+    wiki: true
+    # Enable issue management
+    issues: true
+    # Enable projects for project management boards
+    projects: true
+
+  # Buttons
+  enabled_merge_buttons:
+    # Disable squash button:
+    squash: false
+    # enable merge button:
+    merge: true
+    # disable rebase button:
+    rebase: false
+
+  # Enable pages publishing
+  ghp_branch: gh-pages
+  ghp_path: /
