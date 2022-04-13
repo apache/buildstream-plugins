@@ -43,6 +43,11 @@ DATA_DIR = os.path.join(
 )
 
 
+def generate_project_with_git(project, config):
+    config["plugins"] = [{"origin": "pip", "package-name": "buildstream-plugins", "sources": ["git"]}]
+    generate_project(project, config)
+
+
 @pytest.mark.skipif(HAVE_GIT is False, reason="git is not available")
 @pytest.mark.datafiles(os.path.join(DATA_DIR, "template"))
 def test_fetch_bad_ref(cli, tmpdir, datafiles):
@@ -445,7 +450,7 @@ def test_ref_not_in_track(cli, tmpdir, datafiles, fail):
 
     # Make the warning an error if we're testing errors
     if fail == "error":
-        generate_project(project, config={"fatal-warnings": [CoreWarnings.REF_NOT_IN_TRACK]})
+        generate_project_with_git(project, config={"fatal-warnings": [CoreWarnings.REF_NOT_IN_TRACK]})
 
     # Create the repo from 'repofiles', create a branch without latest commit
     repo = create_repo("git", str(tmpdir))
@@ -479,7 +484,7 @@ def test_unlisted_submodule(cli, tmpdir, datafiles, fail):
 
     # Make the warning an error if we're testing errors
     if fail == "error":
-        generate_project(project, config={"fatal-warnings": ["git:unlisted-submodule"]})
+        generate_project_with_git(project, config={"fatal-warnings": ["git:unlisted-submodule"]})
 
     # Create the submodule first from the 'subrepofiles' subdir
     subrepo = create_repo("git", str(tmpdir), "subrepo")
@@ -537,7 +542,7 @@ def test_track_unlisted_submodule(cli, tmpdir, datafiles, fail):
 
     # Make the warning an error if we're testing errors
     if fail == "error":
-        generate_project(project, config={"fatal-warnings": ["git:unlisted-submodule"]})
+        generate_project_with_git(project, config={"fatal-warnings": ["git:unlisted-submodule"]})
 
     # Create the submodule first from the 'subrepofiles' subdir
     subrepo = create_repo("git", str(tmpdir), "subrepo")
@@ -591,7 +596,7 @@ def test_invalid_submodule(cli, tmpdir, datafiles, fail):
 
     # Make the warning an error if we're testing errors
     if fail == "error":
-        generate_project(project, config={"fatal-warnings": ["git:invalid-submodule"]})
+        generate_project_with_git(project, config={"fatal-warnings": ["git:invalid-submodule"]})
 
     # Create the repo from 'repofiles' subdir
     repo = create_repo("git", str(tmpdir))
@@ -644,7 +649,7 @@ def test_track_invalid_submodule(cli, tmpdir, datafiles, fail):
 
     # Make the warning an error if we're testing errors
     if fail == "error":
-        generate_project(project, config={"fatal-warnings": ["git:invalid-submodule"]})
+        generate_project_with_git(project, config={"fatal-warnings": ["git:invalid-submodule"]})
 
     # Create the submodule first from the 'subrepofiles' subdir
     subrepo = create_repo("git", str(tmpdir), "subrepo")
@@ -742,7 +747,7 @@ def test_git_describe(cli, tmpdir, datafiles, ref_storage, tag_type):
 
     project_config = load_yaml(os.path.join(project, "project.conf"))
     project_config["ref-storage"] = ref_storage
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     repofiles = os.path.join(str(tmpdir), "repofiles")
     os.makedirs(repofiles, exist_ok=True)
@@ -852,7 +857,7 @@ def test_git_describe_head_is_tagged(cli, tmpdir, datafiles, ref_storage, tag_ty
 
     project_config = load_yaml(os.path.join(project, "project.conf"))
     project_config["ref-storage"] = ref_storage
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     repofiles = os.path.join(str(tmpdir), "repofiles")
     os.makedirs(repofiles, exist_ok=True)
@@ -959,7 +964,7 @@ def test_git_describe_relevant_history(cli, tmpdir, datafiles):
 
     project_config = load_yaml(os.path.join(project, "project.conf"))
     project_config["ref-storage"] = "project.refs"
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     repofiles = os.path.join(str(tmpdir), "repofiles")
     os.makedirs(repofiles, exist_ok=True)
@@ -1032,7 +1037,7 @@ def test_default_do_not_track_tags(cli, tmpdir, datafiles):
 
     project_config = load_yaml(os.path.join(project, "project.conf"))
     project_config["ref-storage"] = "inline"
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     repofiles = os.path.join(str(tmpdir), "repofiles")
     os.makedirs(repofiles, exist_ok=True)
@@ -1088,7 +1093,7 @@ def test_overwrite_rogue_tag_multiple_remotes(cli, tmpdir, datafiles):
     project_config = load_yaml(os.path.join(project, "project.conf"))
     project_config["aliases"] = Node.from_dict({"repo": "http://example.com/"})
     project_config["mirrors"] = [{"name": "middle-earth", "aliases": {"repo": ["file://{}/".format(repodir)]}}]
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     repo.add_annotated_tag("tag", "tag")
 
@@ -1130,7 +1135,7 @@ def test_overwrite_rogue_tag_multiple_remotes(cli, tmpdir, datafiles):
 
     repodir, reponame = os.path.split(repo.repo)
 
-    generate_project(project, config=project_config)
+    generate_project_with_git(project, config=project_config)
 
     config = repo.source_config(ref=new_ref)
     del config["track"]
