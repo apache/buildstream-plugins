@@ -86,6 +86,7 @@ _PYTHON_VERSIONS = [
     "python3.6",
     "python3.7",
     "python3.8",
+    "python3.9",
 ]
 
 # List of allowed extensions taken from
