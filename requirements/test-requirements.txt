@@ -6,4 +6,4 @@ pytest-datafiles >= 2.0
 pylint
 pycodestyle
 pyftpdlib
-
+responses
