@@ -16,6 +16,12 @@
 #  Authors:
 #        Tristan Van Berkom <tristan.vanberkom@codethink.co.uk>
 
+#
+# This plugin was originally developped in the https://github.com/apache/buildstream/
+# repository and was copied from 1a3c707a6c46573ab159de64ac9cd92e7f6027e6
+#
+
+
 """
 autotools - Autotools build element
 ===================================

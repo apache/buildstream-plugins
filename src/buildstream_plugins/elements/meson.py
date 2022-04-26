@@ -13,6 +13,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+#
+# This plugin was originally developped in the https://gitlab.com/BuildStream/bst-plugins-experimental/
+# repository and was copied from a60426126e5bec2d630fcd889a9f5af13af00ea6
+#
+
 """
 meson - Meson build element
 ===========================
