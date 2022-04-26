@@ -18,6 +18,11 @@
 #        Sam Thursfield <sam.thursfield@codethink.co.uk>
 #        Chandan Singh <csingh43@bloomberg.net>
 
+#
+# This plugin was originally developped in the https://gitlab.com/BuildStream/bst-plugins-container/
+# repository and was copied from 192aa75a62161b655b051d5b69f17d9233cf4dfe
+#
+
 """
 docker - stage files from Docker images
 =======================================

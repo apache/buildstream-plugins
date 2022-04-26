@@ -16,6 +16,11 @@
 #  Authors:
 #        Ed Baunton <ebaunton1@bloomberg.net>
 
+#
+# This plugin was originally developped in the https://gitlab.com/BuildStream/bst-plugins-experimental/
+# repository and was copied from a60426126e5bec2d630fcd889a9f5af13af00ea6
+#
+
 """
 make - Make build element
 =========================

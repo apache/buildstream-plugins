@@ -16,6 +16,11 @@
 #  Authors:
 #        Chandan Singh <csingh43@bloomberg.net>
 
+#
+# This plugin was originally developped in the https://github.com/apache/buildstream/
+# repository and was copied from 1a3c707a6c46573ab159de64ac9cd92e7f6027e6
+#
+
 """
 pip - stage python packages using pip
 =====================================
