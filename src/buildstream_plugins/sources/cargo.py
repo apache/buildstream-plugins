@@ -344,10 +344,6 @@ class CargoSource(Source):
         # The url before any aliasing
         #
         self.url = node.get_str("url", "https://static.crates.io/crates")
-        # XXX: should we use get_sequence here?
-        self.ref = node.get_sequence("ref", None)
-        if self.ref is not None:
-            self.ref = self.ref.strip_node_info()
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
 
@@ -356,7 +352,7 @@ class CargoSource(Source):
         # Needs to be marked here so that `track` can translate it later.
         self.mark_download_url(self.url)
 
-        self.crates = self._parse_crates(self.ref)
+        self.load_ref(node)
 
     def preflight(self):
         return
@@ -371,16 +367,15 @@ class CargoSource(Source):
         return all(crate.is_cached() for crate in self.crates)
 
     def load_ref(self, node):
-        # XXX: this should be get_sequence, and parse_crate should expect nodes
-        self.ref = node.get_sequence("ref", None)
-        self.crates = self._parse_crates(self.ref)
+        ref = node.get_sequence("ref", None)
+        self._recompute_crates(ref)
 
     def get_ref(self):
         return self.ref
 
     def set_ref(self, ref, node):
-        node["ref"] = self.ref = ref
-        self.crates = self._parse_crates(self.ref)
+        node["ref"] = ref
+        self._recompute_crates(ref)
 
     def track(self, *, previous_sources_dir):
         new_ref = []
@@ -449,6 +444,13 @@ class CargoSource(Source):
     ########################################################
     #                   Private helpers                    #
     ########################################################
+
+    def _recompute_crates(self, ref):
+        self.crates = self._parse_crates(ref)
+        if not self.crates:
+            self.ref = None
+        else:
+            self.ref = [{"name": crate.name, "version": crate.version, "sha": crate.sha} for crate in self.crates]
 
     # _parse_crates():
     #
