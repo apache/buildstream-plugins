@@ -2,7 +2,7 @@
 # aren't required for buildstream-plugins to be installed.
 
 # Cargo source
-toml
+tomli
 
 # Docker source
 requests
