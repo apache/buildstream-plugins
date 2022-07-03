@@ -1,7 +1,4 @@
 # Additional requirements for running mypy
 
-# For cargo plugin
-types-toml
-
 # For docker plugin
 types-requests

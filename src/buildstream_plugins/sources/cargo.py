@@ -70,7 +70,13 @@ import tarfile
 import urllib.error
 import urllib.request
 
-import toml
+# We prefer tomli that was put into standard library as tomllib
+# starting from 3.11
+try:
+    import tomllib  # type: ignore
+except ImportError:
+    import tomli as tomllib  # type: ignore
+
 from buildstream import Source, SourceFetcher, SourceError
 from buildstream import utils
 
@@ -380,8 +386,8 @@ class CargoSource(Source):
         try:
             with open(lockfile, "r", encoding="utf-8") as f:
                 try:
-                    lock = toml.load(f)
-                except toml.TomlDecodeError as e:
+                    lock = tomllib.load(f)
+                except tomllib.TOMLDecodeError as e:
                     raise SourceError(
                         "Malformed Cargo.lock file at: {}".format(self.cargo_lock),
                         detail="{}".format(e),
