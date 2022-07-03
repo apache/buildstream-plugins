@@ -463,9 +463,9 @@ class CargoSource(Source):
         return [
             Crate(
                 self,
-                crate["name"],
-                crate["version"],
-                sha=crate.get("sha", None),
+                crate.get_str("name"),
+                crate.get_str("version"),
+                sha=crate.get_str("sha", None),
             )
             for crate in refs
         ]
