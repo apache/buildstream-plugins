@@ -57,7 +57,7 @@ def test_handle_network_error(cli, datafiles):
     )
     # allow authentication to go through
     responses.add_passthru(
-        "https://auth.docker.io/" "token?service=registry.docker.io&scope=repository:library/alpine:pull"
+        "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/alpine:pull"
     )
     # By not adding a rule for the blob, accessing
     # "https://registry.hub.docker.com/v2/" \
