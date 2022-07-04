@@ -344,16 +344,15 @@ class CargoSource(Source):
         # The url before any aliasing
         #
         self.url = node.get_str("url", "https://static.crates.io/crates")
-        # XXX: should we use get_sequence here?
-        self.ref = node.get_sequence("ref", None)
-        if self.ref is not None:
-            self.ref = self.ref.strip_node_info()
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
 
         node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir"])
 
-        self.crates = self._parse_crates(self.ref)
+        # Needs to be marked here so that `track` can translate it later.
+        self.mark_download_url(self.url)
+
+        self.load_ref(node)
 
     def preflight(self):
         return
@@ -368,16 +367,15 @@ class CargoSource(Source):
         return all(crate.is_cached() for crate in self.crates)
 
     def load_ref(self, node):
-        # XXX: this should be get_sequence, and parse_crate should expect nodes
-        self.ref = node.get_sequence("ref", None)
-        self.crates = self._parse_crates(self.ref)
+        ref = node.get_sequence("ref", None)
+        self._recompute_crates(ref)
 
     def get_ref(self):
         return self.ref
 
     def set_ref(self, ref, node):
-        node["ref"] = self.ref = ref
-        self.crates = self._parse_crates(self.ref)
+        node["ref"] = ref
+        self._recompute_crates(ref)
 
     def track(self, *, previous_sources_dir):
         new_ref = []
@@ -405,13 +403,16 @@ class CargoSource(Source):
         for package in lock["package"]:
             if "source" not in package:
                 continue
-            new_ref += [{"name": package["name"], "version": str(package["version"])}]
+            new_ref += [{"name": package["name"], "version": str(package["version"]), "sha": package.get("checksum")}]
 
         # Make sure the order we set it at track time is deterministic
         new_ref = sorted(new_ref, key=lambda c: (c["name"], c["version"]))
 
         # Download the crates and get their shas
         for crate_obj in new_ref:
+            if crate_obj["sha"] is not None:
+                continue
+
             crate = Crate(self, crate_obj["name"], crate_obj["version"])
 
             crate_url = crate._get_url()
@@ -444,6 +445,13 @@ class CargoSource(Source):
     #                   Private helpers                    #
     ########################################################
 
+    def _recompute_crates(self, ref):
+        self.crates = self._parse_crates(ref)
+        if not self.crates:
+            self.ref = None
+        else:
+            self.ref = [{"name": crate.name, "version": crate.version, "sha": crate.sha} for crate in self.crates]
+
     # _parse_crates():
     #
     # Generates a list of crates based on the passed ref
@@ -463,9 +471,9 @@ class CargoSource(Source):
         return [
             Crate(
                 self,
-                crate["name"],
-                crate["version"],
-                sha=crate.get("sha", None),
+                crate.get_str("name"),
+                crate.get_str("version"),
+                sha=crate.get_str("sha", None),
             )
             for crate in refs
         ]
