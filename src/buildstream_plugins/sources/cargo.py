@@ -382,7 +382,7 @@ class CargoSource(Source):
         lockfile = os.path.join(previous_sources_dir, self.cargo_lock)
 
         try:
-            with open(lockfile, "r", encoding="utf-8") as f:
+            with open(lockfile, "rb") as f:
                 try:
                     lock = tomllib.load(f)
                 except tomllib.TOMLDecodeError as e:
