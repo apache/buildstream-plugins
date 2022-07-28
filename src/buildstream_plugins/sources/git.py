@@ -827,14 +827,14 @@ class GitSource(Source):
             node["ref"] = self.mirror.ref = actual_ref
             self.mirror.tags = tags
             if tags:
-                node["tags"] = []
-                for tag, commit_ref, annotated in tags:
-                    data = {
+                node["tags"] = [
+                    {
                         "tag": tag,
                         "commit": commit_ref,
                         "annotated": annotated,
                     }
-                    node["tags"].append(data)
+                    for tag, commit_ref, annotated in tags
+                ]
             else:
                 if "tags" in node:
                     del node["tags"]

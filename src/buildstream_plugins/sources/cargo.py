@@ -375,7 +375,7 @@ class CargoSource(Source):
 
     def set_ref(self, ref, node):
         node["ref"] = ref
-        self._recompute_crates(ref)
+        self._recompute_crates(node.get_sequence("ref"))
 
     def track(self, *, previous_sources_dir):
         new_ref = []
