@@ -1,6 +1,7 @@
 # Autotools default configurations
 
 variables:
+  build-dir: "%{conf-root}"
 
   autogen: |
     export NOCONFIGURE=1;
@@ -93,20 +94,21 @@ config:
   - |
     %{autogen}
   - |
-    %{configure}
+    mkdir -p "%{build-dir}"
+    (cd "%{build-dir}" && %{configure})
 
   # Commands for building the software
   #
   build-commands:
   - |
-    %{make}
+    (cd "%{build-dir}" && %{make})
 
   # Commands for installing the software into a
   # destination folder
   #
   install-commands:
   - |
-    %{make-install}
+    (cd "%{build-dir}" && %{make-install})
   - |
     %{delete-libtool-archives}
 
