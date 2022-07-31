@@ -51,6 +51,14 @@ an example of that:
          conf-global: |
            --disable-gtk-doc --disable-static
 
+By default build-dir is not used. To improve probability build does not
+tamper with sources, you can set build-dir like
+
+.. code:: yaml
+
+   variables:
+     build-dir: bst_build-dir
+
 Here is the default configuration for the ``autotools`` element in full:
 
   .. literalinclude:: ../../../src/buildstream_plugins/elements/autotools.yaml
