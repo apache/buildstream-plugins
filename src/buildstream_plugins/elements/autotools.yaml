@@ -45,8 +45,14 @@ variables:
 
     %{conf-cmd} %{conf-args}
 
-  make: make -C "%{build-dir}"
-  make-install: make -j1 -C "%{build-dir}" DESTDIR="%{install-root}" install
+  make-args: >-
+    -C "%{build-dir}"
+  make-install-args: >-
+    %{make-args}
+    DESTDIR="%{install-root}"
+    install
+  make: make %{make-args}
+  make-install: make -j1 %{make-install-args}
 
   # Set this if the sources cannot handle parallelization.
   #
