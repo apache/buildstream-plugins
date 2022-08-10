@@ -36,4 +36,4 @@ github:
 
   # Enable pages publishing
   ghp_branch: gh-pages
-  ghp_path: ~
+  ghp_path: /docs
