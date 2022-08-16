@@ -1,5 +1,25 @@
-==================
-buildstream 1.95.0
-==================
+==========================
+buildstream-plugins 1.95.1
+==========================
+
+  o Fixing documentation generation
+
+  o Updating pylint and correcting errors
+
+  o Port cargo plugin to use tomli, this will remove the toml
+    dependency as tomli will soon be part of the standard library
+
+  o Some fixes to the cargo plugin
+
+  o Update Source.set_ref() implementations according to last minute
+    API correction
+
+  o Fixed publishing of documentation
+
+  o Some enhancements to the variables used in the autotools plugin
+
+==========================
+buildstream-plugins 1.95.0
+==========================
 
 Initial beta release of buildstream-plugins.
