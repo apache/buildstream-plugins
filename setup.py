@@ -40,7 +40,7 @@ with open(
 
 setup(
     name="buildstream-plugins",
-    version="1.95.0",
+    version="1.95.1",
     author="BuildStream Developers",
     author_email="dev@buildstream.apache.org",
     classifiers=[
