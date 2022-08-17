@@ -1,8 +1,6 @@
 # Autotools default configurations
 
 variables:
-  build-dir: "."
-
   autogen: |
     export NOCONFIGURE=1;
 
@@ -16,6 +14,13 @@ variables:
 
   # Project-wide extra arguments to be passed to `configure`
   conf-global: ''
+
+  # The directory where the configure script will be generated and used
+  conf-root: "%{build-root}/%{command-subdir}"
+  # The subdirectory of %{build-root} where commands will be run
+  command-subdir: "."
+  # When set, the directory configure generates output files to
+  build-dir: "."
 
   # Element-specific extra arguments to be passed to `configure`.
   conf-local: ''
