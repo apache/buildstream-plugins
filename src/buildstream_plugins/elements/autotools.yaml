@@ -1,7 +1,6 @@
 # Autotools default configurations
 
 variables:
-  build-dir: "."
 
   autogen: |
     export NOCONFIGURE=1;
@@ -45,8 +44,7 @@ variables:
 
     %{conf-cmd} %{conf-args}
 
-  make-args: >-
-    -C "%{build-dir}"
+  make-args: ""
   make-install-args: >-
     %{make-args}
     DESTDIR="%{install-root}"
@@ -100,8 +98,6 @@ config:
   - |
     %{autogen}
   - |
-    mkdir -p "%{build-dir}"
-    cd "%{build-dir}"
     %{configure}
 
   # Commands for building the software
