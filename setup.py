@@ -37,10 +37,16 @@ with open(
 ) as readme:
     long_description = readme.read()
 
+###############################################################################
+#                             Load the version                                #
+###############################################################################
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+from buildstream_plugins import __version__  # pylint: disable=wrong-import-position
+
 
 setup(
     name="buildstream-plugins",
-    version="1.95.1",
+    version=__version__,
     author="BuildStream Developers",
     author_email="dev@buildstream.apache.org",
     classifiers=[
