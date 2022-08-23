@@ -80,14 +80,14 @@ confidence=
 #    pylint to also check for those things.
 #
 
-disable=#####################################
+disable=
+	#####################################
         # Messages that are of no use to us #
         #####################################
         ,
 	consider-using-f-string,
         fixme,
         missing-docstring,
-        no-self-use,
         no-else-return,
         protected-access,
         too-few-public-methods,
@@ -133,7 +133,6 @@ disable=#####################################
         # Formatting-related messages, enforced by Black #
         ##################################################
 
-        bad-continuation,
         line-too-long,
         superfluous-parens,
 
