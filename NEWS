@@ -1,4 +1,14 @@
 ==========================
+buildstream-plugins 1.95.3
+==========================
+
+  o Revert the convenience build-dir attempt for autotools (#29)
+
+  o Fix new linting errors
+
+  o Manage release version in one place (#33)
+
+==========================
 buildstream-plugins 1.95.1
 ==========================
 
