@@ -1,4 +1,11 @@
 ==========================
+buildstream-plugins 1.95.4
+==========================
+
+  o Fixing license headers in source files and ensuring
+    that LICENSE / NOTICE are included in source distributions
+
+==========================
 buildstream-plugins 1.95.3
 ==========================
 
