@@ -56,8 +56,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'BuildStream Plugins'
-copyright = '2022, BuildStream Developers'
-author = 'BuildStream Developers'
+copyright = '2022, The Apache Software Foundation'
+author = 'The Apache Software Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

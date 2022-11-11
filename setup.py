@@ -45,7 +45,7 @@ from buildstream_plugins import __version__  # pylint: disable=wrong-import-posi
 setup(
     name="buildstream-plugins",
     version=__version__,
-    author="BuildStream Developers",
+    author="The Apache Software Foundation",
     author_email="dev@buildstream.apache.org",
     classifiers=[
         "Environment :: Console",
@@ -65,7 +65,7 @@ setup(
     license="Apache License Version 2.0",
     url="https://buildstream.build",
     project_urls={
-        "Documentation": "https://docs.buildstream.build/",
+        "Documentation": "https://apache.github.io/buildstream-plugins/",
     },
     package_dir={"": "src"},
     packages=find_packages(where="src"),
