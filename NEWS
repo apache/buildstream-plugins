@@ -1,4 +1,14 @@
 ==========================
+buildstream-plugins 1.95.5
+==========================
+
+  o Updating copyright year in NOTICE file
+
+  o Updating setup.py with updated author and documentaiton link
+
+  o Updating generated documentation to use new author and copyright
+
+==========================
 buildstream-plugins 1.95.4
 ==========================
 
