@@ -1,5 +1,8 @@
 global-include *.yaml
 include requirements/*
 include project.conf
+include COMMITTERS.rst
 include LICENSE
 include NOTICE
+include NEWS
+include README.rst
