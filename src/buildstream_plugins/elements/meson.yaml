@@ -40,7 +40,7 @@ variables:
     --mandir=%{mandir} \
     --infodir=%{infodir} %{meson-extra} %{meson-global} %{meson-local}
 
-  meson: meson %{conf-root} %{build-dir} %{meson-args}
+  meson: meson setup %{conf-root} %{build-dir} %{meson-args}
 
   ninja: |
     ninja -j ${NINJAJOBS} -C %{build-dir}
