@@ -22,16 +22,13 @@ variables:
   # Element-specific extra arguments to be passed to `cmake`.
   cmake-local: ''
 
-  # For backwards compatibility only, do not use.
-  cmake-extra: ''
-
   # The cmake generator to use
   generator: Ninja
 
   cmake-args: |
 
     -DCMAKE_INSTALL_PREFIX:PATH="%{prefix}" \
-    -DCMAKE_INSTALL_LIBDIR:PATH="%{lib}" %{cmake-extra} %{cmake-global} %{cmake-local}
+    -DCMAKE_INSTALL_LIBDIR:PATH="%{lib}" %{cmake-global} %{cmake-local}
 
   cmake: |
 
