@@ -1,4 +1,12 @@
 ==========================
+buildstream-plugins 1.95.6
+==========================
+
+  o Removed some deprecated variables from plugins (#34)
+
+  o Avoid deprecation warnings in meson (#38)
+
+==========================
 buildstream-plugins 1.95.5
 ==========================
 
