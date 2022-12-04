@@ -39,11 +39,11 @@ variables:
 
   meson: meson setup %{conf-root} %{build-dir} %{meson-args}
 
-  ninja: |
-    ninja -j ${NINJAJOBS} -C %{build-dir}
+  meson-build: |
+    ninja -j ${JOBS} -C %{build-dir}
 
-  ninja-install: |
-    env DESTDIR="%{install-root}" ninja -C %{build-dir} install
+  meson-install: |
+    env DESTDIR="%{install-root}" meson install -C %{build-dir} --no-rebuild
 
   # Set this if the sources cannot handle parallelization.
   #
@@ -61,14 +61,14 @@ config:
   #
   build-commands:
   - |
-    %{ninja}
+    %{meson-build}
 
   # Commands for installing the software into a
   # destination folder
   #
   install-commands:
   - |
-    %{ninja-install}
+    %{meson-install}
 
   # Commands for stripping debugging information out of
   # installed binaries
@@ -79,10 +79,10 @@ config:
 
 # Use max-jobs CPUs for building
 environment:
-  NINJAJOBS: |
+  JOBS: |
     %{max-jobs}
 
-# And dont consider NINJAJOBS as something which may
+# And dont consider JOBS as something which may
 # affect build output.
 environment-nocache:
-- NINJAJOBS
+- JOBS
