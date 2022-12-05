@@ -1,4 +1,12 @@
 ==========================
+buildstream-plugins 1.95.7
+==========================
+
+  o meson: Use `meson install` and rename JOBS environment variable (#41)
+
+  o meson, cmake: Ensure verbosity (#42)
+
+==========================
 buildstream-plugins 1.95.6
 ==========================
 
