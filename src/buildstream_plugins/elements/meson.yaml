@@ -40,7 +40,7 @@ variables:
   meson: meson setup %{conf-root} %{build-dir} %{meson-args}
 
   meson-build: |
-    ninja -j ${JOBS} -C %{build-dir}
+    ninja -v -j ${JOBS} -C %{build-dir}
 
   meson-install: |
     env DESTDIR="%{install-root}" meson install -C %{build-dir} --no-rebuild

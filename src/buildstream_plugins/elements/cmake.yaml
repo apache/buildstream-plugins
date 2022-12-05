@@ -27,6 +27,7 @@ variables:
 
   cmake-args: |
 
+    -DCMAKE_VERBOSE_MAKEFILE=ON \
     -DCMAKE_INSTALL_PREFIX:PATH="%{prefix}" \
     -DCMAKE_INSTALL_LIBDIR:PATH="%{lib}" %{cmake-global} %{cmake-local}
 
@@ -72,10 +73,8 @@ config:
 # Use max-jobs CPUs for building and enable verbosity
 environment:
   JOBS: -j%{max-jobs}
-  V: 1
 
-# And dont consider JOBS or V as something which may
+# And dont consider JOBS as something which may
 # affect build output.
 environment-nocache:
 - JOBS
-- V
