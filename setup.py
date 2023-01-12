@@ -66,6 +66,9 @@ setup(
     url="https://buildstream.build",
     project_urls={
         "Documentation": "https://apache.github.io/buildstream-plugins/",
+        "Source": "https://github.com/apache/buildstream-plugins/",
+        "Tracker": "https://github.com/apache/buildstream-plugins/issues",
+        "Mailing List": "https://lists.apache.org/list.html?dev@buildstream.apache.org",
     },
     package_dir={"": "src"},
     packages=find_packages(where="src"),
