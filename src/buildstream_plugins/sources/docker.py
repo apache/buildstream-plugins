@@ -349,7 +349,7 @@ class DockerSource(Source):
     def configure(self, node):
         # url is deprecated, but accept it as a valid key so that we can raise
         # a nicer warning.
-        node.validate_keys(["registry-url", "image", "ref", "track", "url"] + Source.COMMON_CONFIG_KEYS)
+        node.validate_keys(Source.COMMON_CONFIG_KEYS + ["architecture", "registry-url", "image", "ref", "track", "url"])
 
         if "url" in node:
             raise SourceError(
