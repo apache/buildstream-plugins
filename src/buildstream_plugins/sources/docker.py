@@ -212,8 +212,8 @@ class DockerRegistryV2Client:
         self,
         image_path,
         reference,
-        architecture=default_architecture(),
-        os_=default_os(),
+        architecture,
+        os_,
     ):
         # pylint: disable=too-many-locals
 
@@ -400,7 +400,7 @@ class DockerSource(Source):
             "Fetching image manifest for image: '{}:{}' from: {}".format(self.image, self.tag, self.registry_url)
         ):
             try:
-                _, digest = self.client.manifest(self.image, self.tag)
+                _, digest = self.client.manifest(self.image, self.tag, self.architecture, self.os)
             except DockerManifestError as e:
                 self.log("Problem downloading manifest", detail=e.manifest)
                 raise
@@ -465,7 +465,12 @@ class DockerSource(Source):
                     manifest = self._load_manifest()
                 except FileNotFoundError as e:
                     try:
-                        manifest_text, digest = self.client.manifest(self.image, self.digest)
+                        manifest_text, digest = self.client.manifest(
+                            self.image,
+                            self.digest,
+                            self.architecture,
+                            self.os,
+                        )
                     except requests.RequestException as ee:
                         raise SourceError(ee) from ee
 
