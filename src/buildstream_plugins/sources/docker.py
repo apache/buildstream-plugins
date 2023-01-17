@@ -269,12 +269,11 @@ class DockerRegistryV2Client:
                         architecture=architecture,
                         os_=os_,
                     )
-                else:
-                    raise DockerManifestError(
-                        "No images found for architecture {}, OS {}".format(architecture, os_),
-                        manifest=response.text,
-                    )
-        elif manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
+            raise DockerManifestError(
+                "No images found for architecture {}, OS {}".format(architecture, os_),
+                manifest=response.text,
+            )
+        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
             return response.text, our_digest
         else:
             raise DockerManifestError(
