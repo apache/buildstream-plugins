@@ -212,8 +212,8 @@ class DockerRegistryV2Client:
         self,
         image_path,
         reference,
-        architecture=default_architecture(),
-        os_=default_os(),
+        architecture,
+        os_,
     ):
         # pylint: disable=too-many-locals
 
@@ -269,12 +269,11 @@ class DockerRegistryV2Client:
                         architecture=architecture,
                         os_=os_,
                     )
-                else:
-                    raise DockerManifestError(
-                        "No images found for architecture {}, OS {}".format(architecture, os_),
-                        manifest=response.text,
-                    )
-        elif manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
+            raise DockerManifestError(
+                "No images found for architecture {}, OS {}".format(architecture, os_),
+                manifest=response.text,
+            )
+        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
             return response.text, our_digest
         else:
             raise DockerManifestError(
@@ -349,7 +348,9 @@ class DockerSource(Source):
     def configure(self, node):
         # url is deprecated, but accept it as a valid key so that we can raise
         # a nicer warning.
-        node.validate_keys(["registry-url", "image", "ref", "track", "url"] + Source.COMMON_CONFIG_KEYS)
+        node.validate_keys(
+            Source.COMMON_CONFIG_KEYS + ["architecture", "registry-url", "image", "os", "ref", "track", "url"]
+        )
 
         if "url" in node:
             raise SourceError(
@@ -400,7 +401,7 @@ class DockerSource(Source):
             "Fetching image manifest for image: '{}:{}' from: {}".format(self.image, self.tag, self.registry_url)
         ):
             try:
-                _, digest = self.client.manifest(self.image, self.tag)
+                _, digest = self.client.manifest(self.image, self.tag, self.architecture, self.os)
             except DockerManifestError as e:
                 self.log("Problem downloading manifest", detail=e.manifest)
                 raise
@@ -465,7 +466,12 @@ class DockerSource(Source):
                     manifest = self._load_manifest()
                 except FileNotFoundError as e:
                     try:
-                        manifest_text, digest = self.client.manifest(self.image, self.digest)
+                        manifest_text, digest = self.client.manifest(
+                            self.image,
+                            self.digest,
+                            self.architecture,
+                            self.os,
+                        )
                     except requests.RequestException as ee:
                         raise SourceError(ee) from ee
 
