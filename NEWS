@@ -1,3 +1,19 @@
+=========================
+buildstream-plugins 2.0.1
+=========================
+
+ o docker source: Fix "architecture" and "os" configuration options
+
+ o Updating some package metadata/links
+
+ o Support Python 3.11
+
+=========================
+buildstream-plugins 2.0.0
+=========================
+
+No changes in 2.0.0 over 1.95.7
+
 ==========================
 buildstream-plugins 1.95.7
 ==========================
