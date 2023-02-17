@@ -47,8 +47,11 @@ docker - stage files from Docker images
    # will choose which image to use based on these settings. Default values
    # are chosen based on the output of `uname -m` and `uname -s`, but you
    # can override them.
-   #architecture: arm64
-   #os: linux
+   #
+   # architecture: arm64
+   # os: linux
+   #
+   # **Since**: 2.0.1
 
 Note that Docker images may contain device nodes. BuildStream elements cannot
 contain device nodes so those will be dropped. Any regular files in the /dev
