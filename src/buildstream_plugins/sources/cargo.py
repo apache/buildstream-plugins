@@ -67,6 +67,7 @@ import shutil
 import tarfile
 import urllib.error
 import urllib.request
+from urllib.parse import urljoin
 
 # We prefer tomli that was put into standard library as tomllib
 # starting from 3.11
@@ -270,7 +271,8 @@ class Crate(SourceFetcher):
     #
     def _get_url(self, alias=None):
         url = self.cargo.translate_url(self.cargo.url, alias_override=alias)
-        return "{url}/{name}/{name}-{version}.crate".format(url=url, name=self.name, version=self.version)
+        path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
+        return urljoin(f"{url}/", path)
 
     # _get_etag()
     #
