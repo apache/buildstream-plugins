@@ -1,4 +1,10 @@
 =========================
+buildstream-plugins 2.1.0
+=========================
+
+ o Guard against malformed URIs in cargo crates (#52)
+
+=========================
 buildstream-plugins 2.0.1
 =========================
 
