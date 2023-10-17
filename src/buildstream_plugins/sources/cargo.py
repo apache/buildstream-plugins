@@ -109,7 +109,7 @@ class Crate(SourceFetcher):
         self.name = name
         self.version = str(version)
         self.sha = sha
-        self.mark_download_url(self._get_url())
+        self.mark_download_url(cargo.url)
 
     ########################################################
     #     SourceFetcher API method implementations         #
