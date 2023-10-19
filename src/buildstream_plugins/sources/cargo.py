@@ -60,14 +60,12 @@ See `built-in functionality doumentation
 details on common configuration options for sources.
 """
 
-import contextlib
 import json
 import os.path
 import shutil
 import tarfile
-import urllib.error
-import urllib.request
 from urllib.parse import urljoin
+import requests
 
 # We prefer tomli that was put into standard library as tomllib
 # starting from 3.11
@@ -202,9 +200,7 @@ class Crate(SourceFetcher):
         try:
             with self.cargo.tempdir() as td:
                 default_name = os.path.basename(url)
-                request = urllib.request.Request(url)
-                request.add_header("Accept", "*/*")
-                request.add_header("User-Agent", "BuildStream/2")
+                headers = {"Accept": "*/*", "User-Agent": "BuildStream/2"}
 
                 # We do not use etag in case what we have in cache is
                 # not matching ref in order to be able to recover from
@@ -212,18 +208,30 @@ class Crate(SourceFetcher):
                 if self.sha:
                     etag = self._get_etag(self.sha)
                     if etag and self.is_cached():
-                        request.add_header("If-None-Match", etag)
+                        headers["If-None-Match"] = etag
 
-                with contextlib.closing(urllib.request.urlopen(request)) as response:
-                    info = response.info()
+                response = requests.get(url, headers=headers, timeout=60, stream=True)
 
-                    etag = info["ETag"] if "ETag" in info else None
+                if not response.ok:
+                    raise SourceError(
+                        "{}: Error mirroring {}: HTTP Error {}: {}".format(
+                            self, url, response.status_code, response.reason
+                        ),
+                        temporary=True,
+                    )
 
-                    filename = info.get_filename(default_name)
-                    filename = os.path.basename(filename)
-                    local_file = os.path.join(td, filename)
-                    with open(local_file, "wb") as dest:
-                        shutil.copyfileobj(response, dest)
+                if response.status_code == 304:
+                    # 304 Not Modified.
+                    # Because we use etag only for matching sha, currently specified sha is what
+                    # we would have downloaded.
+                    return self.sha
+
+                etag = response.headers.get("ETag")
+
+                filename = os.path.basename(default_name)
+                local_file = os.path.join(td, filename)
+                with open(local_file, "wb") as dest:
+                    shutil.copyfileobj(response.raw, dest)
 
                 # Make sure url-specific mirror dir exists.
                 os.makedirs(self._get_mirror_dir(), exist_ok=True)
@@ -237,23 +245,7 @@ class Crate(SourceFetcher):
                 if etag:
                     self._store_etag(sha256, etag)
                 return sha256
-
-        except urllib.error.HTTPError as e:
-            if e.code == 304:
-                # 304 Not Modified.
-                # Because we use etag only for matching sha, currently specified sha is what
-                # we would have downloaded.
-                return self.sha
-            raise SourceError(
-                "{}: Error mirroring {}: {}".format(self, url, e),
-                temporary=True,
-            ) from e
-
-        except (
-            urllib.error.URLError,
-            urllib.error.ContentTooShortError,
-            OSError,
-        ) as e:
+        except (requests.ConnectionError, OSError) as e:
             raise SourceError(
                 "{}: Error mirroring {}: {}".format(self, url, e),
                 temporary=True,
