@@ -60,13 +60,9 @@ See `built-in functionality doumentation
 details on common configuration options for sources.
 """
 
-import contextlib
 import json
 import os.path
-import shutil
 import tarfile
-import urllib.error
-import urllib.request
 from urllib.parse import urljoin
 
 # We prefer tomli that was put into standard library as tomllib
@@ -78,6 +74,8 @@ except ImportError:
 
 from buildstream import Source, SourceFetcher, SourceError
 from buildstream import utils
+
+from ._utils import download_file
 
 
 # This automatically goes into .cargo/config
@@ -198,66 +196,32 @@ class Crate(SourceFetcher):
     #    (str): The sha256 checksum of the downloaded crate
     #
     def _download(self, url):
+        # We do not use etag in case what we have in cache is
+        # not matching ref in order to be able to recover from
+        # corrupted download.
+        if self.sha:
+            etag = self._get_etag(self.sha)
+        else:
+            etag = None
 
-        try:
-            with self.cargo.tempdir() as td:
-                default_name = os.path.basename(url)
-                request = urllib.request.Request(url)
-                request.add_header("Accept", "*/*")
-                request.add_header("User-Agent", "BuildStream/2")
+        with self.cargo.tempdir() as td:
+            local_file, etag, error = download_file(url, etag, td)
 
-                # We do not use etag in case what we have in cache is
-                # not matching ref in order to be able to recover from
-                # corrupted download.
-                if self.sha:
-                    etag = self._get_etag(self.sha)
-                    if etag and self.is_cached():
-                        request.add_header("If-None-Match", etag)
+            if error:
+                raise SourceError("{}: Error mirroring {}: {}".format(self, url, error), temporary=True)
 
-                with contextlib.closing(urllib.request.urlopen(request)) as response:
-                    info = response.info()
+            # Make sure url-specific mirror dir exists.
+            os.makedirs(self._get_mirror_dir(), exist_ok=True)
 
-                    etag = info["ETag"] if "ETag" in info else None
+            # Store by sha256sum
+            sha256 = utils.sha256sum(local_file)
+            # Even if the file already exists, move the new file over.
+            # In case the old file was corrupted somehow.
+            os.rename(local_file, self._get_mirror_file(sha256))
 
-                    filename = info.get_filename(default_name)
-                    filename = os.path.basename(filename)
-                    local_file = os.path.join(td, filename)
-                    with open(local_file, "wb") as dest:
-                        shutil.copyfileobj(response, dest)
-
-                # Make sure url-specific mirror dir exists.
-                os.makedirs(self._get_mirror_dir(), exist_ok=True)
-
-                # Store by sha256sum
-                sha256 = utils.sha256sum(local_file)
-                # Even if the file already exists, move the new file over.
-                # In case the old file was corrupted somehow.
-                os.rename(local_file, self._get_mirror_file(sha256))
-
-                if etag:
-                    self._store_etag(sha256, etag)
-                return sha256
-
-        except urllib.error.HTTPError as e:
-            if e.code == 304:
-                # 304 Not Modified.
-                # Because we use etag only for matching sha, currently specified sha is what
-                # we would have downloaded.
-                return self.sha
-            raise SourceError(
-                "{}: Error mirroring {}: {}".format(self, url, e),
-                temporary=True,
-            ) from e
-
-        except (
-            urllib.error.URLError,
-            urllib.error.ContentTooShortError,
-            OSError,
-        ) as e:
-            raise SourceError(
-                "{}: Error mirroring {}: {}".format(self, url, e),
-                temporary=True,
-            ) from e
+            if etag:
+                self._store_etag(sha256, etag)
+            return sha256
 
     # _get_url()
     #
