@@ -37,6 +37,10 @@ docker - stage files from Docker images
    # Image path (required)
    image: library/alpine
 
+   # Alternatively, you can specify a full url, the registry endpoint
+   # is assumed to be at the root of the domain
+   # url: https://registry.hub.docker.com/library/alpine
+
    # Image tag to follow (optional)
    track: latest
 
@@ -365,13 +369,18 @@ class DockerSource(Source):
         )
 
         if "url" in node:
-            raise SourceError(
-                "{}: 'url' parameter is now deprecated, " "use 'registry-url' and 'image' instead.".format(self)
-            )
-
-        self.image = node.get_str("image")
-        self.original_registry_url = node.get_str("registry-url", _DOCKER_HUB_URL)
-        self.registry_url = self.translate_url(self.original_registry_url)
+            self.url = node.get_str("url")
+            translated_url = self.translate_url(self.url)
+            scheme, netloc, path, _, _ = urllib.parse.urlsplit(translated_url)
+            self.registry_url = urllib.parse.urlunsplit((scheme, netloc, "", "", ""))
+            self.image = path
+        elif "image" in node:
+            self.url = None
+            self.image = node.get_str("image")
+            self.original_registry_url = node.get_str("registry-url", _DOCKER_HUB_URL)
+            self.registry_url = self.translate_url(self.original_registry_url)
+        else:
+            raise SourceError("must define either url or image")
 
         if "ref" in node:
             self.digest = self._ref_to_digest(node.get_str("ref"))
@@ -393,7 +402,10 @@ class DockerSource(Source):
         return
 
     def get_unique_key(self):
-        return [self.original_registry_url, self.image, self.digest]
+        if self.url is not None:
+            return [self.url, self.digest]
+        else:
+            return [self.original_registry_url, self.image, self.digest]
 
     def get_ref(self):
         return None if self.digest is None else self._digest_to_ref(self.digest)
