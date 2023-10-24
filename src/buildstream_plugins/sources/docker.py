@@ -121,6 +121,26 @@ def urljoin(url, *args):
     return url
 
 
+# Handles authentication with a bearer token
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, api_timeout=3):
+        self.token = None
+        self.api_timeout = api_timeout
+
+    def __call__(self, r):
+        if self.token:
+            r.headers["Authorization"] = "Bearer {}".format(self.token)
+        return r
+
+    def _auth(self, realm, service, scope):
+        # Respond to an Www-Authenticate challenge by requesting the necessary
+        # token from the 'realm' (endpoint) that we were given in the challenge.
+        request_url = "{}?service={}&scope={}".format(realm, service, scope)
+        response = requests.get(request_url, timeout=self.api_timeout)
+        response.raise_for_status()
+        self.token = response.json()["token"]
+
+
 # DockerManifestError
 #
 # Raised if something goes wrong while querying an image manifest from a remote
@@ -137,7 +157,7 @@ class DockerRegistryV2Client:
         self.endpoint = endpoint
         self.api_timeout = api_timeout
 
-        self.token = None
+        self.auth = BearerAuth(api_timeout)
 
     def _request(self, subpath, extra_headers=None, stream=False, _reauthorized=False):
         if not extra_headers:
@@ -146,31 +166,20 @@ class DockerRegistryV2Client:
         headers = {"content-type": "application/json"}
         headers.update(extra_headers)
 
-        if self.token:
-            headers["Authorization"] = "Bearer {}".format(self.token)
-
         url = urljoin(self.endpoint, "v2", subpath)
-        response = requests.get(url, headers=headers, stream=stream, timeout=self.api_timeout)
+        response = requests.get(url, headers=headers, stream=stream, timeout=self.api_timeout, auth=self.auth)
 
         if response.status_code == requests.codes["unauthorized"] and not _reauthorized:
             # This request requires (re)authorization. See:
             # https://docs.docker.com/registry/spec/auth/token/
             auth_challenge = response.headers["Www-Authenticate"]
             auth_vars = parse_bearer_authorization_challenge(auth_challenge)
-            self._auth(auth_vars["realm"], auth_vars["service"], auth_vars["scope"])
+            self.auth._auth(auth_vars["realm"], auth_vars["service"], auth_vars["scope"])
             return self._request(subpath, extra_headers=extra_headers, _reauthorized=True)
         else:
             response.raise_for_status()
 
             return response
-
-    def _auth(self, realm, service, scope):
-        # Respond to an Www-Authenticate challenge by requesting the necessary
-        # token from the 'realm' (endpoint) that we were given in the challenge.
-        request_url = "{}?service={}&scope={}".format(realm, service, scope)
-        response = requests.get(request_url, timeout=self.api_timeout)
-        response.raise_for_status()
-        self.token = response.json()["token"]
 
     # digest():
     #
