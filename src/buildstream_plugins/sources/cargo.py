@@ -35,8 +35,8 @@ obtain the crates automatically into %{vendordir}.
    # Specify the cargo source kind
    kind: cargo
 
-   # Url of the crates repository to download from (default: https://static.crates.io/crates)
-   url: https://static.crates.io/crates
+   # Url of the crates repository to download from (default: https://static.crates.io/crates/)
+   url: https://static.crates.io/crates/
 
    # Internal source reference, this is a list of dictionaries
    # which store the crate names and versions.
@@ -63,7 +63,6 @@ details on common configuration options for sources.
 import json
 import os.path
 import tarfile
-from urllib.parse import urljoin
 
 # We prefer tomli that was put into standard library as tomllib
 # starting from 3.11
@@ -234,9 +233,11 @@ class Crate(SourceFetcher):
     #    (str): The URL for this crate
     #
     def _get_url(self, alias=None):
-        url = self.cargo.translate_url(self.cargo.url, alias_override=alias)
         path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
-        return urljoin(f"{url}/", path)
+        if utils.get_bst_version() >= (2, 2):
+            return self.cargo.translate_url(self.cargo.url, suffix=path, alias_override=alias)
+        else:
+            return self.cargo.translate_url(self.cargo.url, alias_override=alias) + path
 
     # _get_etag()
     #
@@ -307,7 +308,7 @@ class CargoSource(Source):
 
         # The url before any aliasing
         #
-        self.url = node.get_str("url", "https://static.crates.io/crates")
+        self.url = node.get_str("url", "https://static.crates.io/crates/")
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
 
