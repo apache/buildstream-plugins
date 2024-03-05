@@ -63,7 +63,6 @@ details on common configuration options for sources.
 import json
 import os.path
 import tarfile
-from urllib.parse import urljoin
 
 # We prefer tomli that was put into standard library as tomllib
 # starting from 3.11
@@ -234,9 +233,11 @@ class Crate(SourceFetcher):
     #    (str): The URL for this crate
     #
     def _get_url(self, alias=None):
-        url = self.cargo.translate_url(self.cargo.url, alias_override=alias)
         path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
-        return urljoin(f"{url}/", path)
+        if utils.get_bst_version() >= (2, 2):
+            return self.cargo.translate_url(self.cargo.url, suffix=path, alias_override=alias)
+        else:
+            return self.cargo.translate_url(self.cargo.url, alias_override=alias) + path
 
     # _get_etag()
     #
@@ -307,9 +308,16 @@ class CargoSource(Source):
 
         # The url before any aliasing
         #
-        self.url = node.get_str("url", "https://static.crates.io/crates")
+        self.original_url = node.get_str("url", "https://static.crates.io/crates")
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
+
+        # If the specified URL is just an alias, require the alias to resolve
+        # to a URL with a trailing slash. Otherwise, append a trailing slash if
+        # it's missing, for backward compatibility.
+        self.url = self.original_url
+        if not self.url.endswith(":") and not self.url.endswith("/"):
+            self.url += "/"
 
         node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir"])
 
@@ -322,7 +330,7 @@ class CargoSource(Source):
         return
 
     def get_unique_key(self):
-        return [self.url, self.cargo_lock, self.vendor_dir, self.ref]
+        return [self.original_url, self.cargo_lock, self.vendor_dir, self.ref]
 
     def is_resolved(self):
         return (self.ref is not None) and all(crate.is_resolved() for crate in self.crates)
