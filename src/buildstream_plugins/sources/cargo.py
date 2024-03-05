@@ -63,7 +63,6 @@ details on common configuration options for sources.
 import json
 import os.path
 import tarfile
-from urllib.parse import urljoin
 
 # We prefer tomli that was put into standard library as tomllib
 # starting from 3.11
@@ -107,7 +106,13 @@ class Crate(SourceFetcher):
         self.name = name
         self.version = str(version)
         self.sha = sha
-        self.mark_download_url(cargo.url)
+        # XXX: Kinda regresses on https://github.com/apache/buildstream-plugins/pull/52
+        # by only supporting the requested behaviour rather than both the old and new.
+        path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
+        self.url = self.cargo.url + path
+
+        self.mark_download_url(self.url)
+        self.cargo.mark_download_url(self.url, primary=False)
 
     ########################################################
     #     SourceFetcher API method implementations         #
@@ -123,7 +128,7 @@ class Crate(SourceFetcher):
             return  # pragma: nocover
 
         # Download the crate
-        crate_url = self._get_url(alias_override)
+        crate_url = self.cargo.translate_url(self.url, alias_override=alias_override)
         with self.cargo.timed_activity("Downloading: {}".format(crate_url), silent_nested=True):
             sha256 = self._download(crate_url)
             if self.sha is not None and sha256 != self.sha:
@@ -223,21 +228,6 @@ class Crate(SourceFetcher):
                 self._store_etag(sha256, etag)
             return sha256
 
-    # _get_url()
-    #
-    # Fetches the URL to download this crate from
-    #
-    # Args:
-    #    alias (str|None): The URL alias to apply, if any
-    #
-    # Returns:
-    #    (str): The URL for this crate
-    #
-    def _get_url(self, alias=None):
-        url = self.cargo.translate_url(self.cargo.url, alias_override=alias)
-        path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
-        return urljoin(f"{url}/", path)
-
     # _get_etag()
     #
     # Fetches the locally stored ETag information for this
@@ -313,7 +303,7 @@ class CargoSource(Source):
 
         node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir"])
 
-        # Needs to be marked here so that `track` can translate it later.
+        # Needs to be marked here so that `stage` can translate it later.
         self.mark_download_url(self.url)
 
         self.load_ref(node)
@@ -379,7 +369,7 @@ class CargoSource(Source):
 
             crate = Crate(self, crate_obj["name"], crate_obj["version"])
 
-            crate_url = crate._get_url()
+            crate_url = self.translate_url(crate.url)
             with self.timed_activity("Downloading: {}".format(crate_url), silent_nested=True):
                 crate_obj["sha"] = crate._download(crate_url)
 
