@@ -59,24 +59,41 @@ def _parse_netrc():
 
 
 class _UrlOpenerCreator:
-    def __init__(self, netrc_config):
+    def __init__(self, netrc_config, auth_header_format):
         self.netrc_config = netrc_config
+        self.auth_header_format = auth_header_format
 
     def get_url_opener(self):
-        if self.netrc_config:
+        if not self.auth_header_format and self.netrc_config:
             netrc_pw_mgr = _NetrcPasswordManager(self.netrc_config)
             http_auth = urllib.request.HTTPBasicAuthHandler(netrc_pw_mgr)
             return urllib.request.build_opener(http_auth)
         return urllib.request.build_opener()
 
 
-def download_file(url, etag, directory):
-    opener_creator = _UrlOpenerCreator(_parse_netrc())
+def download_file(url, etag, directory, auth_header_format=""):
+    opener_creator = _UrlOpenerCreator(_parse_netrc(), auth_header_format)
     opener = opener_creator.get_url_opener()
     default_name = os.path.basename(url)
     request = urllib.request.Request(url)
     request.add_header("Accept", "*/*")
     request.add_header("User-Agent", "BuildStream/2")
+
+    if opener_creator.auth_header_format:
+        if not opener_creator.netrc_config:
+            raise SourceError("Authorization header format specified without supporting netrc")
+
+        parts = urllib.parse.urlsplit(url)
+        entry = opener_creator.netrc_config.authenticators(parts.hostname)
+        if not entry:
+            raise SourceError(
+                "Authorization header format specified without provided password",
+                detail="No password specified in netrc for hostname: {}".format(parts.hostname),
+            )
+
+        _, _, password = entry
+        auth_header = opener_creator.auth_header_format.format(password=password)
+        request.add_header("Authorization", auth_header)
 
     if etag is not None:
         request.add_header("If-None-Match", etag)

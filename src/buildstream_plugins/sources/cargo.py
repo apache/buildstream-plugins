@@ -114,6 +114,8 @@ class Crate(SourceFetcher):
         self.mark_download_url(self.url)
         self.cargo.mark_download_url(self.url, primary=False)
 
+        self.auth_header_format = None
+
     ########################################################
     #     SourceFetcher API method implementations         #
     ########################################################
@@ -127,8 +129,10 @@ class Crate(SourceFetcher):
         if os.path.isfile(self._get_mirror_file()):
             return  # pragma: nocover
 
+        extra_data = {}
         # Download the crate
-        crate_url = self.cargo.translate_url(self.url, alias_override=alias_override)
+        crate_url = self.cargo.translate_url(self.url, alias_override=alias_override, extra_data=extra_data)
+        self.auth_header_format = extra_data.get("auth-header-format")
         with self.cargo.timed_activity("Downloading: {}".format(crate_url), silent_nested=True):
             sha256 = self._download(crate_url)
             if self.sha is not None and sha256 != self.sha:
@@ -210,7 +214,7 @@ class Crate(SourceFetcher):
             etag = None
 
         with self.cargo.tempdir() as td:
-            local_file, etag, error = download_file(url, etag, td)
+            local_file, etag, error = download_file(url, etag, td, self.auth_header_format)
 
             if error:
                 raise SourceError("{}: Error mirroring {}: {}".format(self, url, error), temporary=True)
