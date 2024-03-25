@@ -38,6 +38,12 @@ obtain the crates automatically into %{vendordir}.
    # Url of the crates repository to download from (default: https://static.crates.io/crates)
    url: https://static.crates.io/crates
 
+   # Url mappings to download git sources from. The values support aliases to which global
+   # mirrors are also applied. More specific mappings take precedence over more general ones.
+   git-mirrors:
+    https://gitlab.com: "github:"
+    https://gitlab.com/specific/repo: https://example.org/specific/repo
+
    # Internal source reference, this is a list of dictionaries
    # which store the crate names and versions.
    #
@@ -60,6 +66,7 @@ See `built-in functionality doumentation
 details on common configuration options for sources.
 """
 
+from collections import OrderedDict
 import glob
 import json
 import os.path
@@ -342,8 +349,9 @@ class CrateGit(SourceFetcher):
         self.version = str(version)
         self.repo = repo
         self.commit = commit
-        # TODO: Is this right?
-        self.mark_download_url(self.repo)
+        self.repo_mirrored = cargo.mirrored_git_url(repo)
+
+        self.mark_download_url(self.repo_mirrored)
 
     ########################################################
     #     SourceFetcher API method implementations         #
@@ -351,10 +359,11 @@ class CrateGit(SourceFetcher):
 
     def fetch(self, alias_override=None, **kwargs):
         lock = REPO_LOCKS.setdefault(self._get_mirror_dir(), threading.Lock())
+        repo_url = self._get_url(alias=alias_override)
 
-        with lock, self._mirror_repo() as repo, self.cargo.timed_activity(f"Fetching from {self.repo}"):
+        with lock, self._mirror_repo() as repo, self.cargo.timed_activity(f"Fetching from {repo_url}"):
             # TODO: Auth not supported
-            client, path = dulwich.client.get_transport_and_path(self.repo)
+            client, path = dulwich.client.get_transport_and_path(repo_url)
             remote_refs = client.fetch(
                 path,
                 repo,
@@ -493,7 +502,7 @@ class CrateGit(SourceFetcher):
     #    (str): The URL for this crate
     #
     def _get_url(self, alias=None):
-        return self.cargo.translate_url(self.repo, alias_override=alias)
+        return self.cargo.translate_url(self.repo_mirrored, alias_override=alias, primary=False)
 
     # _mirror_repo()
     #
@@ -608,11 +617,17 @@ class CargoSource(Source):
         self.url = node.get_str("url", "https://static.crates.io/crates")
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
+        self.git_mirrors = node.get_mapping("git-mirrors", {})
 
-        node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir"])
+        node.validate_keys(Source.COMMON_CONFIG_KEYS + ["url", "ref", "cargo-lock", "vendor-dir", "git-mirrors"])
 
         # Needs to be marked here so that `track` can translate it later.
         self.mark_download_url(self.url)
+
+        # Needs to be marked here such that it can be used in fetch later.
+        for crate in node.get_sequence("ref", []):
+            if crate.get_str("kind", "") == "git":
+                self.mark_download_url(self.mirrored_git_url(crate.get_str("repo")), primary=False)
 
         self.load_ref(node)
 
@@ -731,6 +746,34 @@ class CargoSource(Source):
 
     def get_source_fetchers(self):
         return self.crates
+
+    ########################################################
+    #      Helper APIs for CrateGit and Cargo to use       #
+    ########################################################
+
+    # mirrored_git_url():
+    #
+    # Applies the defined "git-mirrors" mappings to a git URL.
+    #
+    # Args:
+    #    (str) git_url: The raw URL from the element
+    #
+    # Returns:
+    #    (str): The git URL with potentially mirror applied
+    #
+    def mirrored_git_url(self, git_url):
+        use_mirror = None
+        for url, mirror in self.git_mirrors.items():
+            mirror = mirror.as_str()
+            if git_url.startswith(url):
+                # Use the most specific (longest) URL
+                if use_mirror is None or len(use_mirror[0]) < len(url):
+                    use_mirror = (url, mirror)
+
+        if use_mirror is not None:
+            return git_url.replace(use_mirror[0], use_mirror[1])
+        else:
+            return git_url
 
     ########################################################
     #                   Private helpers                    #
