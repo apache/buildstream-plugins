@@ -3,6 +3,7 @@
 
 # Cargo source
 tomli
+tomlkit
 
 # Docker source
 requests

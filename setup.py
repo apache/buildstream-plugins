@@ -94,7 +94,7 @@ setup(
         ],
     },
     extras_require={
-        "cargo": ['tomli; python_version < "3.11"'],
+        "cargo": ['tomli; python_version < "3.11"', "tomlkit"],
     },
     zip_safe=False,
 )

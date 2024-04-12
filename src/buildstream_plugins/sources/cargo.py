@@ -87,7 +87,7 @@ from buildstream import utils
 
 import dulwich
 from dulwich.repo import Repo
-import tomli_w
+import tomlkit
 
 from ._utils import download_file
 
@@ -437,8 +437,8 @@ class CrateGit(SourceFetcher):
             # Apply information inherited from workspace Cargo.toml
             config_inherit_workspace(crate["config"], root_toml["workspace"])
 
-            with open(os.path.join(crates[self.name]["path"], "Cargo.toml"), "bw") as f:
-                tomli_w.dump(crate["config"], f)
+            with open(os.path.join(crates[self.name]["path"], "Cargo.toml"), "w") as f:
+                tomlkit.dump(crate["config"], f)
 
             shutil.move(crate["path"], crate_target_dir)
         else:
