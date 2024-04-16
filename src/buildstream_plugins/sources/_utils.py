@@ -62,21 +62,29 @@ class _UrlOpenerCreator:
     def __init__(self, netrc_config):
         self.netrc_config = netrc_config
 
-    def get_url_opener(self):
-        if self.netrc_config:
+    def get_url_opener(self, bearer_auth):
+        if self.netrc_config and not bearer_auth:
             netrc_pw_mgr = _NetrcPasswordManager(self.netrc_config)
             http_auth = urllib.request.HTTPBasicAuthHandler(netrc_pw_mgr)
             return urllib.request.build_opener(http_auth)
         return urllib.request.build_opener()
 
 
-def download_file(url, etag, directory):
+def download_file(url, etag, directory, auth_scheme):
     opener_creator = _UrlOpenerCreator(_parse_netrc())
-    opener = opener_creator.get_url_opener()
+    opener = opener_creator.get_url_opener(auth_scheme == "bearer")
     default_name = os.path.basename(url)
     request = urllib.request.Request(url)
     request.add_header("Accept", "*/*")
     request.add_header("User-Agent", "BuildStream/2")
+
+    if opener_creator.netrc_config and auth_scheme == "bearer":
+        parts = urllib.parse.urlsplit(url)
+        entry = opener_creator.netrc_config.authenticators(parts.hostname)
+        if entry:
+            _, _, password = entry
+            auth_header = "Bearer " + password
+            request.add_header("Authorization", auth_header)
 
     if etag is not None:
         request.add_header("If-None-Match", etag)
