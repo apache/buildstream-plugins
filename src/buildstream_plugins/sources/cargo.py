@@ -122,9 +122,9 @@ class Crate(SourceFetcher):
             return  # pragma: nocover
 
         # Download the crate
-        crate_url = self._get_url(alias_override)
+        crate_url, auth_scheme = self._get_url(alias_override)
         with self.cargo.timed_activity("Downloading: {}".format(crate_url), silent_nested=True):
-            sha256 = self._download(crate_url)
+            sha256 = self._download(crate_url, auth_scheme)
             if self.sha is not None and sha256 != self.sha:
                 raise SourceError(
                     "File downloaded from {} has sha256sum '{}', not '{}'!".format(crate_url, sha256, self.sha)
@@ -194,7 +194,7 @@ class Crate(SourceFetcher):
     # Returns:
     #    (str): The sha256 checksum of the downloaded crate
     #
-    def _download(self, url):
+    def _download(self, url, auth_scheme):
         # We do not use etag in case what we have in cache is
         # not matching ref in order to be able to recover from
         # corrupted download.
@@ -204,7 +204,7 @@ class Crate(SourceFetcher):
             etag = None
 
         with self.cargo.tempdir() as td:
-            local_file, etag, error = download_file(url, etag, td)
+            local_file, etag, error = download_file(url, etag, td, auth_scheme)
 
             if error:
                 raise SourceError("{}: Error mirroring {}: {}".format(self, url, error), temporary=True)
@@ -234,10 +234,15 @@ class Crate(SourceFetcher):
     #
     def _get_url(self, alias=None):
         path = "{name}/{name}-{version}.crate".format(name=self.name, version=self.version)
+        extra_data = {}
         if utils.get_bst_version() >= (2, 2):
-            return self.cargo.translate_url(self.cargo.url, suffix=path, alias_override=alias)
+            translated_url = self.cargo.translate_url(
+                self.cargo.url, suffix=path, alias_override=alias, extra_data=extra_data
+            )
         else:
-            return self.cargo.translate_url(self.cargo.url, alias_override=alias) + path
+            translated_url = self.cargo.translate_url(self.cargo.url, alias_override=alias) + path
+
+        return translated_url, extra_data.get("http-auth")
 
     # _get_etag()
     #
@@ -387,9 +392,9 @@ class CargoSource(Source):
 
             crate = Crate(self, crate_obj["name"], crate_obj["version"])
 
-            crate_url = crate._get_url()
+            crate_url, auth_scheme = crate._get_url()
             with self.timed_activity("Downloading: {}".format(crate_url), silent_nested=True):
-                crate_obj["sha"] = crate._download(crate_url)
+                crate_obj["sha"] = crate._download(crate_url, auth_scheme)
 
         return new_ref
 
