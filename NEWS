@@ -1,4 +1,18 @@
 =========================
+buildstream-plugins 2.2.0
+=========================
+
+ o cargo: Fix mirroring (#55)
+
+ o cargo: Support authentication using .netrc (#57)
+
+ o docker: Fix authentication when using .netrc (#59)
+
+ o docker: Improve flexibility for mirroring (#58)
+
+ o cargo: Add support for source mirrors and bearer http authentication (#60, #64)
+
+=========================
 buildstream-plugins 2.1.0
 =========================
 
