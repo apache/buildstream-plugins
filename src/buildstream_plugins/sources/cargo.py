@@ -28,6 +28,9 @@ Placing this source in the source list, after a source which stages a
 Cargo.lock file, will allow this source to read the Cargo.lock file and
 obtain the crates automatically into %{vendordir}.
 
+Set the `ref` field to an empty list like so: `ref: []`, and then run
+`bst source track path_to_bst_file.bst`.
+
 **Usage:**
 
 .. code:: yaml
@@ -41,7 +44,7 @@ obtain the crates automatically into %{vendordir}.
    # Internal source reference, this is a list of dictionaries
    # which store the crate names and versions.
    #
-   # This will be automatically updated with `bst track`
+   # This will be automatically updated with `bst source track`
    ref:
    - name: packagename
      version: 1.2.1
