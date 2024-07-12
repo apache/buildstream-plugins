@@ -146,8 +146,14 @@ class Crate(SourceFetcher):
         try:
             mirror_file = self._get_mirror_file()
             with tarfile.open(mirror_file) as tar:
-                tar.extractall(path=directory)
                 members = tar.getmembers()
+                if hasattr(tarfile, "tar_filter"):
+                    # Python 3.12+ (and older versions with backports)
+                    tar.extractall(path=directory, filter="tar")
+                else:
+                    for member in members:
+                        self._assert_tarinfo_safe(member, directory)
+                    tar.extractall(path=directory, members=members)
 
             if members:
                 dirname = members[0].name.split("/")[0]
@@ -183,6 +189,30 @@ class Crate(SourceFetcher):
     ########################################################
     #                   Private helpers                    #
     ########################################################
+
+    # Assert that a tarfile is safe to extract; specifically, make
+    # sure that we don't do anything outside of the target
+    # directory (this is possible, if, say, someone engineered a
+    # tarfile to contain paths that start with ..).
+    def _assert_tarinfo_safe(self, member: tarfile.TarInfo, target_dir: str):
+        final_path = os.path.abspath(os.path.join(target_dir, member.path))
+        if not final_path.startswith(target_dir):
+            raise SourceError(
+                "{}: Tarfile attempts to extract outside the staging area: "
+                "{} -> {}".format(self, member.path, final_path)
+            )
+
+        if member.islnk():
+            linked_path = os.path.abspath(os.path.join(target_dir, member.linkname))
+            if not linked_path.startswith(target_dir):
+                raise SourceError(
+                    "{}: Tarfile attempts to hardlink outside the staging area: "
+                    "{} -> {}".format(self, member.path, final_path)
+                )
+
+        # Don't need to worry about symlinks because they're just
+        # files here and won't be able to do much harm once we are
+        # in a sandbox.
 
     # _download()
     #
