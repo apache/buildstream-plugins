@@ -570,6 +570,12 @@ class DockerSource(Source):
                 # extract files for the current layer
                 with tarfile.open(blob_path, tarinfo=ReadableTarInfo) as tar:
                     with self.tempdir() as td:
+                        if hasattr(tarfile, "tar_filter"):
+                            # Python 3.12+ (and older versions with backports)
+                            tar.extraction_filter = tarfile.tar_filter
+                        else:
+                            for member in extract_fileset:
+                                self._assert_tarinfo_safe(member, td)
                         tar.extractall(path=td, members=extract_fileset)
                         link_files(td, directory)
 
@@ -617,6 +623,30 @@ class DockerSource(Source):
                     extract_fileset.append(member)
 
         return extract_fileset, delete_fileset
+
+    # Assert that a tarfile is safe to extract; specifically, make
+    # sure that we don't do anything outside of the target
+    # directory (this is possible, if, say, someone engineered a
+    # tarfile to contain paths that start with ..).
+    def _assert_tarinfo_safe(self, member: tarfile.TarInfo, target_dir: str):
+        final_path = os.path.abspath(os.path.join(target_dir, member.path))
+        if not final_path.startswith(target_dir):
+            raise SourceError(
+                "{}: Tarfile attempts to extract outside the staging area: "
+                "{} -> {}".format(self, member.path, final_path)
+            )
+
+        if member.islnk():
+            linked_path = os.path.abspath(os.path.join(target_dir, member.linkname))
+            if not linked_path.startswith(target_dir):
+                raise SourceError(
+                    "{}: Tarfile attempts to hardlink outside the staging area: "
+                    "{} -> {}".format(self, member.path, final_path)
+                )
+
+        # Don't need to worry about symlinks because they're just
+        # files here and won't be able to do much harm once we are
+        # in a sandbox.
 
 
 # Plugin entry point
