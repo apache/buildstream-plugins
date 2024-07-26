@@ -36,14 +36,14 @@ def create_element(yaml, element_name, element_payload, project):
 
 @pytest.mark.datafiles(DATA_DIR)
 def test_docker_fetch(cli, datafiles):
-    project = os.path.join(datafiles.dirname, datafiles.basename)
+    project = str(datafiles)
     result = cli.run(project=project, args=["source", "fetch", "dockerhub-alpine.bst"])
     result.assert_success()
 
 
 @pytest.mark.datafiles(DATA_DIR)
 def test_docker_source_checkout(cli, datafiles):
-    project = os.path.join(datafiles.dirname, datafiles.basename)
+    project = str(datafiles)
     checkout = os.path.join(cli.directory, "checkout")
     result = cli.run(
         project=project,
@@ -79,7 +79,7 @@ def test_handle_network_error(cli, datafiles):
     # will throw a `ConnectionError`.
 
     # attempt to fetch source
-    project = os.path.join(datafiles.dirname, datafiles.basename)
+    project = str(datafiles)
     result = cli.run(project=project, args=["source", "fetch", "dockerhub-alpine.bst"])
     # check that error is thrown
     result.assert_task_error(ErrorDomain.SOURCE, None)

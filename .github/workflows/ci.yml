@@ -36,10 +36,10 @@ jobs:
         # The names here should map to a valid service defined in
         # "../compose/ci.docker-compose.yml"
         test-name:
-          - debian-10
-          - fedora-34
-          - fedora-35
+          - fedora-38
+          - fedora-39
           - fedora-missing-deps
+          - ubuntu-20.04
           - lint
           - mypy
 
