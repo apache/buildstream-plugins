@@ -39,9 +39,13 @@ HTML_TEMPLATE = """\
     <title>Links for {name}</title>
   </head>
   <body>
-    <a href='{name}-{version}.tar.gz'>{name}-{version}.tar.gz</a><br />
+{links}
   </body>
 </html>
+"""
+
+HTML_LINK_TEMPLATE = """\
+    <a href='{dist}'>{dist}</a><br />
 """
 
 
@@ -94,8 +98,8 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
         f.write(INIT_TEMPLATE.format(name=name))
     os.chmod(main_file, 0o644)
 
-    # Run sdist with a fresh process
-    subprocess.run([sys.executable, "setup.py", "sdist"], cwd=tmpdir, check=True)
+    # Build source distribution
+    subprocess.run([sys.executable, "-m", "build", "--sdist"], cwd=tmpdir, check=True)
 
     # create directory for this package in pypi resulting in a directory
     # tree resembling the following structure:
@@ -107,16 +111,19 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
     #
     os.makedirs(pypi_package)
 
-    # add an index html page
-    index_html = os.path.join(pypi_package, "index.html")
-    with open(index_html, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE.format(name=name, version=version))
+    links = ""
 
     # copy generated tarfile to pypi package
     dist_dir = os.path.join(tmpdir, "dist")
     for tar in os.listdir(dist_dir):
         tarpath = os.path.join(dist_dir, tar)
         shutil.copy(tarpath, pypi_package)
+        links += HTML_LINK_TEMPLATE.format(dist=tar)
+
+    # add an index html page
+    index_html = os.path.join(pypi_package, "index.html")
+    with open(index_html, "w", encoding="utf-8") as f:
+        f.write(HTML_TEMPLATE.format(name=name, links=links))
 
 
 @pytest.fixture
