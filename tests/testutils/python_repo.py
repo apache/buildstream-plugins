@@ -39,7 +39,7 @@ HTML_TEMPLATE = """\
     <title>Links for {name}</title>
   </head>
   <body>
-    <a href='{name}-{version}.tar.gz'>{name}-{version}.tar.gz</a><br />
+    <a href='{distname}'>{distname}</a><br />
   </body>
 </html>
 """
@@ -107,16 +107,18 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
     #
     os.makedirs(pypi_package)
 
+    # copy generated tarfile to pypi package
+    dist_dir = os.path.join(tmpdir, "dist")
+    dist_files = os.listdir(dist_dir)
+    assert len(dist_files) == 1
+    dist_name = dist_files[0]
+    tarpath = os.path.join(dist_dir, dist_name)
+    shutil.copy(tarpath, pypi_package)
+
     # add an index html page
     index_html = os.path.join(pypi_package, "index.html")
     with open(index_html, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE.format(name=name, version=version))
-
-    # copy generated tarfile to pypi package
-    dist_dir = os.path.join(tmpdir, "dist")
-    for tar in os.listdir(dist_dir):
-        tarpath = os.path.join(dist_dir, tar)
-        shutil.copy(tarpath, pypi_package)
+        f.write(HTML_TEMPLATE.format(name=name, distname=dist_name))
 
 
 @pytest.fixture
