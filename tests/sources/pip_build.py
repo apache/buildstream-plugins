@@ -21,7 +21,7 @@ import pytest
 from buildstream import _yaml
 
 from buildstream._testing import cli_integration as cli  # pylint: disable=unused-import
-from buildstream._testing.integration import assert_contains
+from buildstream._testing.integration import assert_contains, walk_dir
 from buildstream._testing.integration import integration_cache  # pylint: disable=unused-import
 from buildstream._testing._utils.site import HAVE_SANDBOX
 
@@ -87,6 +87,8 @@ def test_pip_source_import_packages(cli, datafiles, setup_pypi_repo):
         args=["artifact", "checkout", element_name, "--directory", checkout],
     )
     assert result.exit_code == 0
+
+    print("found tarballs: {}".format(set(walk_dir(checkout))))
 
     assert_contains(
         checkout,
@@ -157,6 +159,8 @@ def test_pip_source_import_requirements_files(cli, datafiles, setup_pypi_repo):
         args=["artifact", "checkout", element_name, "--directory", checkout],
     )
     assert result.exit_code == 0
+
+    print("found tarballs: {}".format(set(walk_dir(checkout))))
 
     assert_contains(
         checkout,
