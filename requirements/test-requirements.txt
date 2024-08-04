@@ -1,3 +1,4 @@
+build
 pytest-env
 # Provide option to run tests in parallel, less reliable
 pytest-xdist
