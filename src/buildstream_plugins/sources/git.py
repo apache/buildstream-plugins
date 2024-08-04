@@ -654,7 +654,9 @@ class GitMirror(SourceFetcher):
             for tag, commit_ref, annotated in self.tags:
                 if annotated:
                     with TemporaryFile(dir=tmpdir) as tag_file:
-                        tag_data = "object {}\ntype commit\ntag {}\n".format(commit_ref, tag)
+                        tag_data = "object {}\ntype commit\ntag {}\ntagger Unspecified Tagger <unspecified-tagger> 0 +0000\n".format(
+                            commit_ref, tag
+                        )
                         tag_file.write(tag_data.encode("ascii"))
                         tag_file.seek(0, 0)
                         _, tag_ref = self.source.check_output(
