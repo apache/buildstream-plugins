@@ -98,8 +98,8 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
         f.write(INIT_TEMPLATE.format(name=name))
     os.chmod(main_file, 0o644)
 
-    # Build distributions
-    subprocess.run([sys.executable, "-m", "build"], cwd=tmpdir, check=True)
+    # Build source distribution
+    subprocess.run([sys.executable, "-m", "build", "--sdist"], cwd=tmpdir, check=True)
 
     # create directory for this package in pypi resulting in a directory
     # tree resembling the following structure:
@@ -113,12 +113,12 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
 
     links = ""
 
-    # copy generated distributions to pypi package
+    # copy generated tarfile to pypi package
     dist_dir = os.path.join(tmpdir, "dist")
-    for dist in os.listdir(dist_dir):
-        distpath = os.path.join(dist_dir, dist)
-        shutil.copy(distpath, pypi_package)
-        links += HTML_LINK_TEMPLATE.format(dist=dist)
+    for tar in os.listdir(dist_dir):
+        tarpath = os.path.join(dist_dir, tar)
+        shutil.copy(tarpath, pypi_package)
+        links += HTML_LINK_TEMPLATE.format(dist=tar)
 
     # add an index html page
     index_html = os.path.join(pypi_package, "index.html")
