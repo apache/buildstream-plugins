@@ -39,9 +39,13 @@ HTML_TEMPLATE = """\
     <title>Links for {name}</title>
   </head>
   <body>
-    <a href='{distname}'>{distname}</a><br />
+{links}
   </body>
 </html>
+"""
+
+HTML_LINK_TEMPLATE = """\
+    <a href='{dist}'>{dist}</a><br />
 """
 
 
@@ -94,8 +98,8 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
         f.write(INIT_TEMPLATE.format(name=name))
     os.chmod(main_file, 0o644)
 
-    # Generate source distribution
-    subprocess.run([sys.executable, "-m", "build", "--sdist"], cwd=tmpdir, check=True)
+    # Build distributions
+    subprocess.run([sys.executable, "-m", "build"], cwd=tmpdir, check=True)
 
     # create directory for this package in pypi resulting in a directory
     # tree resembling the following structure:
@@ -107,18 +111,19 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
     #
     os.makedirs(pypi_package)
 
-    # copy generated tarfile to pypi package
+    links = ""
+
+    # copy generated distributions to pypi package
     dist_dir = os.path.join(tmpdir, "dist")
-    dist_files = os.listdir(dist_dir)
-    assert len(dist_files) == 1
-    dist_name = dist_files[0]
-    tarpath = os.path.join(dist_dir, dist_name)
-    shutil.copy(tarpath, pypi_package)
+    for dist in os.listdir(dist_dir):
+        distpath = os.path.join(dist_dir, dist)
+        shutil.copy(distpath, pypi_package)
+        links += HTML_LINK_TEMPLATE.format(dist=dist)
 
     # add an index html page
     index_html = os.path.join(pypi_package, "index.html")
     with open(index_html, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE.format(name=name, distname=dist_name))
+        f.write(HTML_TEMPLATE.format(name=name, links=links))
 
 
 @pytest.fixture
