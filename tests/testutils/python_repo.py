@@ -126,6 +126,32 @@ def generate_pip_package(tmpdir, pypi, name, version="0.1", dependencies=None):
         f.write(HTML_TEMPLATE.format(name=name, links=links))
 
 
+def mirror_package(pypi, name, version):
+    pypi_package = os.path.join(pypi, name)
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "download",
+            "--no-binary",
+            ":all:",
+            "--dest",
+            pypi_package,
+            f"{name}=={version}",
+        ],
+        check=True,
+    )
+
+    distname = name.replace("-", "_")
+    links = HTML_LINK_TEMPLATE.format(dist=f"{distname}-{version}.tar.gz")
+
+    index_html = os.path.join(pypi_package, "index.html")
+    with open(index_html, "w", encoding="utf-8") as f:
+        f.write(HTML_TEMPLATE.format(name=name, links=links))
+
+
 @pytest.fixture
 def setup_pypi_repo(tmpdir):
     def create_pkgdir(package):
@@ -135,6 +161,11 @@ def setup_pypi_repo(tmpdir):
         return pkgdir
 
     def add_packages(packages, pypi_repo):
+        # Recent versions of pip with build isolation require these packages
+        mirror_package(pypi_repo, "flit-core", "3.9.0")
+        mirror_package(pypi_repo, "setuptools", "71.0.4")
+        mirror_package(pypi_repo, "wheel", "0.43.0")
+
         for package, dependencies in packages.items():
             pkgdir = create_pkgdir(package)
             generate_pip_package(
