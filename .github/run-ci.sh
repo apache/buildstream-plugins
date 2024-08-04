@@ -58,7 +58,7 @@ function runTest() {
     # Run docker-compose from it's directory, because it will use
     # relative paths
     cd "${topdir}/compose"
-    docker-compose \
+    docker compose \
         --env-file ${topdir}/common.env \
         --file ${topdir}/compose/ci.docker-compose.yml \
         run "${test_name}"
