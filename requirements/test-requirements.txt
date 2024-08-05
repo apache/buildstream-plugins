@@ -1,9 +1,11 @@
+build
 pytest-env
 # Provide option to run tests in parallel, less reliable
 pytest-xdist
 pytest >= 6.0.1
-pytest-datafiles >= 2.0,<3
+pytest-datafiles >= 3.0
 pylint
 pycodestyle
 pyftpdlib
 responses
+wheel
