@@ -1,4 +1,14 @@
 =========================
+buildstream-plugins 2.3.0
+=========================
+
+  o pip: support Python 3.12 and future versions (#67)
+
+  o cargo, docker: Check tar member paths (#69)
+
+  o git: add tagger to annotated tags (fix for recent git versions) (#73)
+
+=========================
 buildstream-plugins 2.2.0
 =========================
 
