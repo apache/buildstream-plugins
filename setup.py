@@ -93,6 +93,7 @@ setup(
             "zip = buildstream_plugins.sources.zip",
         ],
         "buildstream.plugins.sourcemirrors": [
+            "gitlab_lfs_mirror = buildstream_plugins.sourcemirrors.gitlab_lfs_mirror",
             "simple_mirror = buildstream_plugins.sourcemirrors.simple_mirror",
         ],
     },
