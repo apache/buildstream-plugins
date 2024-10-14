@@ -72,12 +72,15 @@ clean: templates-clean
 templates:
 	mkdir -p source/elements
 	mkdir -p source/sources
+	mkdir -p source/sourcemirrors
 	$(call plugin-doc-skeleton,$(CURDIR)/../src/buildstream_plugins,elements)
 	$(call plugin-doc-skeleton,$(CURDIR)/../src/buildstream_plugins,sources)
+	$(call plugin-doc-skeleton,$(CURDIR)/../src/buildstream_plugins,sourcemirrors)
 
 templates-clean:
 	rm -rf source/elements
 	rm -rf source/sources
+	rm -rf source/sourcemirrors
 
 # Targets which generate docs with sphinx build
 #
@@ -88,7 +91,8 @@ html devhelp: templates
 	    $(SPHINXBUILD) -b $@ $(ALLSPHINXOPTS) "$(BUILDDIR)/$@" \
 	    $(wildcard source/*.rst) \
 	    $(wildcard source/elements/*.rst) \
-	    $(wildcard source/sources/*.rst)
+	    $(wildcard source/sources/*.rst) \
+	    $(wildcard source/sourcemirrors/*.rst)
 	@echo
 	@echo "Build of $@ finished, output: $(CURDIR)/$(BUILDDIR)/$@"
 

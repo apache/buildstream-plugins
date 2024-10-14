@@ -92,6 +92,9 @@ setup(
             "pip = buildstream_plugins.sources.pip",
             "zip = buildstream_plugins.sources.zip",
         ],
+        "buildstream.plugins.sourcemirrors": [
+            "simple_mirror = buildstream_plugins.sourcemirrors.simple_mirror",
+        ],
     },
     extras_require={
         "cargo": ['tomli; python_version < "3.11"'],

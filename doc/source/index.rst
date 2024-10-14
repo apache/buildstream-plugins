@@ -42,3 +42,9 @@ To these plugins in your project, follow the
    sources/git
    sources/patch
    sources/pip
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Source Mirror Plugins
+
+   sourcemirrors/simple_mirror
