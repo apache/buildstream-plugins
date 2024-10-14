@@ -48,3 +48,4 @@ To these plugins in your project, follow the
    :caption: Source Mirror Plugins
 
    sourcemirrors/simple_mirror
+   sourcemirrors/gitlab_lfs_mirror
