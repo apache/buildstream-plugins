@@ -695,10 +695,11 @@ def test_track_invalid_submodule(cli, tmpdir, datafiles, fail):
 @pytest.mark.skipif(HAVE_GIT is False, reason="git is not available")
 @pytest.mark.datafiles(os.path.join(DATA_DIR, "template"))
 @pytest.mark.parametrize("ref_format", ["sha1", "git-describe"])
-@pytest.mark.parametrize("tag,extra_commit", [(False, False), (True, False), (True, True)])
-def test_track_fetch(cli, tmpdir, datafiles, ref_format, tag, extra_commit):
+@pytest.mark.parametrize("tag_extra_commit", [(False, False), (True, False), (True, True)])
+def test_track_fetch(cli, tmpdir, datafiles, ref_format, tag_extra_commit):
     project = str(datafiles)
 
+    tag, extra_commit = tag_extra_commit
     # Create the repo from 'repofiles' subdir
     repo = create_repo("git", str(tmpdir))
     repo.create(os.path.join(project, "repofiles"))
