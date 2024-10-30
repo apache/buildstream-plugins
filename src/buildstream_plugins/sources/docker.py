@@ -387,21 +387,22 @@ class DockerSource(Source):
             self.original_registry_url = node.get_str("registry-url", _DOCKER_HUB_URL)
             self.registry_url = self.translate_url(self.original_registry_url)
 
-        if "ref" in node:
-            self.digest = self._ref_to_digest(node.get_str("ref"))
-        else:
-            self.digest = None
         self.tag = node.get_str("track", "") or None
 
         self.architecture = node.get_str("architecture", "") or default_architecture()
         self.os = node.get_str("os", "") or default_os()
 
-        if not (self.digest or self.tag):
-            raise SourceError("{}: Must specify either 'ref' or 'track' parameters".format(self))
+        self.digest = None
+        self.load_ref(node)
 
         self.client = DockerRegistryV2Client(self.registry_url)
 
         self.manifest = None
+
+    def load_ref(self, node):
+        ref = node.get_str("ref", None)
+        if ref is not None:
+            self.digest = self._ref_to_digest(ref)
 
     def preflight(self):
         return
