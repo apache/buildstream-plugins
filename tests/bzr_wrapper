@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -x "/usr/bin/bzr" ]; then
+
+    cat > "${1}/bzr" << 'EOF'
+#!/bin/bash
+
+export PATH=/usr/bin
+
+exec /usr/bin/bzr "$@"
+EOF
+
+    chmod +x "${1}/bzr"
+fi
