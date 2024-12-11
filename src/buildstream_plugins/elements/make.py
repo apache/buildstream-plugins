@@ -26,11 +26,6 @@ This is a `BuildElement
 <https://docs.buildstream.build/master/buildstream.scriptelement.html#module-buildstream.scriptelement>`_
 implementation for using GNU make based build.
 
-.. note::
-
-   The ``make`` element is available since `format version 9
-   <https://docs.buildstream.build/master/format_project.html#project-format-version>`_
-
 Here is the default configuration for the ``make`` element in full:
 
   .. literalinclude:: ../../../src/buildstream_plugins/elements/make.yaml
