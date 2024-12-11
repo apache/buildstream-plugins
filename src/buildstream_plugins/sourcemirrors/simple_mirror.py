@@ -48,7 +48,7 @@ class SimpleMirror(SourceMirror):
 
         self.url = node.get_str("url")
 
-    def translate_url(self, alias, alias_url, source_url, extra_data):
+    def translate_url(self, *, alias, alias_url, source_url, extra_data):
         base_url = self.url.format(alias=alias)
         translated_url = join(base_url, source_url)
 
