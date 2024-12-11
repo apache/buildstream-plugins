@@ -66,7 +66,7 @@ class GitlabLFSMirror(SourceMirror):
         self.project = node.get_str("project")
         self.ref = node.get_str("ref", "master")
 
-    def translate_url(self, alias, alias_url, source_url, extra_data):
+    def translate_url(self, *, alias, alias_url, source_url, extra_data):
         project_id = quote(self.project.format(alias=alias), safe="")
         filename = quote(source_url, safe="")
 
