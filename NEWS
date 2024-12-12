@@ -1,4 +1,18 @@
 =========================
+buildstream-plugins 2.4.0
+=========================
+
+ o docker: Support storing ref in project.refs (#66)
+
+ o simple_mirror: Added SourceMirror plugin supporting enhanced URL formatting (#80)
+
+ o gitlab_lfs_mirror: Added SourceMirror intended for use with GitLab LFS repos (#80)
+
+ o Enhanced testing and CI enhancements (#78)
+
+ o Resurrecting CI (#81)
+
+=========================
 buildstream-plugins 2.3.0
 =========================
 
