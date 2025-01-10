@@ -8,4 +8,5 @@ pylint
 pycodestyle
 pyftpdlib
 responses
+setuptools
 wheel
