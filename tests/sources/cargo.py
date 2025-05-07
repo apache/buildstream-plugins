@@ -50,8 +50,27 @@ def generate_project(project_dir):
 def test_cargo_track_fetch_build(cli, datafiles):
     project = str(datafiles)
     generate_project(project)
+
+    # First track
     result = cli.run(project=project, args=["source", "track", "base64.bst"])
     result.assert_success()
+
+    # Now we should be able to get the source info
+    result = cli.run(project=project, args=["show", "--format", "%{name}:\n%{source-info}", "base64.bst"])
+    result.assert_success()
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence("base64.bst")
+
+    # Assert the cargo source, which is in the second position after the local source
+    source_info = sources.mapping_at(1)
+    assert source_info.get_str("kind") == "cargo"
+    assert source_info.get_str("url") == "https://static.crates.io/crates/base64/base64-0.22.1.crate"
+    assert source_info.get_str("medium") == "remote-file"
+    assert source_info.get_str("version-type") == "sha256"
+    assert source_info.get_str("version") == "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+    assert source_info.get_str("version-guess") == "0.22.1"
+
+    # Now fetch and build
     result = cli.run(project=project, args=["source", "fetch", "base64.bst"])
     result.assert_success()
     result = cli.run(project=project, args=["build", "base64.bst"])
