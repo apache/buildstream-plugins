@@ -65,13 +65,40 @@ Downloaded tarballs will be stored in a directory called ".bst_pip_downloads".
 See `built-in functionality doumentation
 <https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins>`_ for
 details on common configuration options for sources.
+
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The pip source reports the python package index (PyPI) instance as the *url*.
+
+Further, the pip source reports the `SourceInfoMedium.PYTHON_PACKAGE_INDEX
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.PYTHON_PACKAGE_INDEX>`_
+*medium* and the `SourceVersionType.INDEXED_VERSION
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.INDEXED_VERSION>`_
+*version_type*, for which it reports the tracked package version as the *version* and the *version_guess*.
+
+Additionally, the pip source reports the package name through
+the ``package-name`` key of the *extra_data*.
+
+The pip source will report one SourceInfo instance for each of the packages discovered in tracking.
 """
 
 import hashlib
 import os
 import re
 
-from buildstream import Source, SourceError, utils
+from buildstream import Source, SourceError
+from buildstream import utils
+
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except ImportError:
+    pass
 
 _OUTPUT_DIRNAME = ".bst_pip_downloads"
 _PYPI_INDEX_URL = "https://pypi.org/simple/"
@@ -108,7 +135,7 @@ _SDIST_RE = re.compile(
 
 class PipSource(Source):
     # pylint: disable=attribute-defined-outside-init
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     # We need access to previous sources at track time to use requirements.txt
     # but not at fetch time as self.ref should contain sufficient information
@@ -223,6 +250,25 @@ class PipSource(Source):
     def stage(self, directory):
         with self.timed_activity("Staging Python packages", silent_nested=True):
             utils.copy_files(self._mirror, os.path.join(directory, _OUTPUT_DIRNAME))
+
+    def collect_source_info(self):
+        infos = []
+        packages_versions = self.ref.splitlines()
+        for package_version in packages_versions:
+            split = package_version.split("==")
+            package = split[0]
+            version = split[1]
+            infos.append(
+                self.create_source_info(
+                    self.index_url,
+                    SourceInfoMedium.PYTHON_PACKAGE_INDEX,
+                    SourceVersionType.INDEXED_VERSION,
+                    version,
+                    version_guess=version,
+                    extra_data={"package-name": package},
+                )
+            )
+        return infos
 
     # Directory where this source should stage its files
     #
