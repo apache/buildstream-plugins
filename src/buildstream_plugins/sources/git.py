@@ -69,7 +69,8 @@ git - stage files from a git repository
    # url from which they are to be fetched allows you to easily
    # rebuild the same sources from a different location. This is
    # especially handy when used with project defined aliases which
-   # can be redefined at a later time.
+   # can be redefined at a later time, or overridden with mirrors.
+   #
    # You may also explicitly specify whether to check out this
    # submodule. If 'checkout' is set, it will control whether to
    # checkout that submodule and recurse into it. It defaults to the
@@ -83,6 +84,18 @@ git - stage files from a git repository
      plugins/baz:
        url: upstream:baz.git
        checkout: False
+
+   # Modify the default version guessing pattern
+   #
+   # Since 2.5
+   #
+   version-guess-pattern: \'(\\d+)\\.(\\d+)(?:\\.(\\d+))?\'
+
+   # Override the version guessing with an explicit version
+   #
+   # Since 2.5
+   #
+   version: 5.9
 
    # Enable tag tracking.
    #
@@ -139,8 +152,8 @@ See `built-in functionality doumentation
 details on common configuration options for sources.
 
 
-**Configurable Warnings:**
-
+Configurable Warnings:
+~~~~~~~~~~~~~~~~~~~~~~
 This plugin provides the following
 `configurable warnings <https://docs.buildstream.build/master/format_project.html#configurable-warnings>`_:
 
@@ -158,8 +171,41 @@ This plugin also utilises the following configurable
 
 - `ref-not-in-track <https://docs.buildstream.build/master/buildstream.types.html#buildstream.types.CoreWarnings.REF_NOT_IN_TRACK>`_ -
   The provided ref was not found in the provided track in the element's git repository.
-"""
 
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The git source reports the URL of the git repository as the *url*.
+
+Further, the git source reports the `SourceInfoMedium.GIT
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.GIT>`_
+*medium* and the `SourceVersionType.COMMIT
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.COMMIT>`_
+*version_type*, for which it reports the git commit sha as the *version*.
+
+If the ref is found to be in ``git-describe`` format, an attempt to guess the version based on the
+git tag portion of the ref will be made for the reporting of the *guess_version*. Control over how
+the guess is made or overridden is controlled based on the ``version-guess-pattern`` and ``version``
+configuration attributes described above.
+
+In order to understand how the ``version-guess-pattern`` works, please refer to the documentation
+for `utils.guess_version() <https://docs.buildstream.build/master/buildstream.source.html#buildstream.utils.guess_version>`_
+
+In the case that a git describe string represents a commit that is beyond the tag portion
+of the git describe reference (i.e. the version is not exact), then the number of commits
+found beyond the tag will be reported in the ``commit-offset`` field of the *extra_data*.
+
+.. attention::
+
+   SourceInfo is **not** reported for submodules.
+
+   This is due to the limitation that the git plugin requires to have the toplevel
+   module fetched first in order to have knowledge of the commits of the submodules.
+
+   While this does not provide *complete* information on the provenance of sources,
+   at least one can consider the module to be a comprehensive whole, and the versions
+   of submodules are deterministically controlled by the version of the main repository.
+"""
 
 import os
 import re
@@ -173,6 +219,16 @@ from buildstream import Source, SourceError, SourceFetcher
 from buildstream import CoreWarnings, FastEnum
 from buildstream import utils
 from buildstream.utils import DirectoryExistsError
+
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except ImportError:
+    pass
 
 GIT_MODULES = ".gitmodules"
 EXACT_TAG_PATTERN = r"(?P<tag>.*)-0-g(?P<commit>.*)"
@@ -697,7 +753,7 @@ class GitMirror(SourceFetcher):
 class GitSource(Source):
     # pylint: disable=attribute-defined-outside-init
 
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     def configure(self, node):
         ref = node.get_str("ref", None)
@@ -711,6 +767,8 @@ class GitSource(Source):
             "ref-format",
             "track-tags",
             "tags",
+            "version",
+            "version-guess-pattern",
         ]
         node.validate_keys(config_keys + Source.COMMON_CONFIG_KEYS)
 
@@ -726,6 +784,14 @@ class GitSource(Source):
         self.tracking = node.get_str("track", None)
 
         self.ref_format = node.get_enum("ref-format", _RefFormat, _RefFormat.SHA1)
+
+        self.guess_pattern_string = node.get_str("version-guess-pattern", None)
+        self.guess_pattern = None
+        if self.guess_pattern_string is not None:
+            self.guess_pattern = re.compile(self.guess_pattern_string)
+
+        # Get the explicitly set guess_version for the toplevel git repo
+        self.version = node.get_str("version", None)
 
         # At this point we now know if the source has a ref and/or a track.
         # If it is missing both then we will be unable to track or build.
@@ -795,6 +861,13 @@ class GitSource(Source):
 
         if self.submodule_checkout_overrides:
             key.append({"submodule_checkout_overrides": self.submodule_checkout_overrides})
+
+        # Backwards compatible method of supporting configuration
+        # attributes which affect SourceInfo generation.
+        if self.version is not None:
+            key.append(self.version)
+        elif self.guess_pattern_string is not None:
+            key.append(self.guess_pattern_string)
 
         return key
 
@@ -986,6 +1059,60 @@ class GitSource(Source):
                     warning_token=CoreWarnings.REF_NOT_IN_TRACK,
                 )
 
+    # _guess_version()
+    #
+    # Guess the version, in the case the ref is recorded in git-describe format
+    #
+    # Returns: a three-tuple composed of the following three values:
+    #    - the version (a git sha)
+    #    - the version_guess (as guessed from the tag portion of a git describe string)
+    #    - the number of commits beyond the tag (indicating that the guessed version is in this case inexact)
+    #
+    # All returns are either None or strings, only the "sha" is guaranteed to be discovered.
+    #
+    def _guess_version(self):
+        version_guess = self.version
+        commits = None
+        commit_sha = None
+
+        string = self.mirror.ref
+
+        main_split = string.rsplit("-g", 1)
+        if len(main_split) < 2:
+            # Didn't find the `-g`, assume its a raw git sha as input
+            commit_sha = string
+        else:
+            # Split out the commits and the tag portion (which may also contain '-')
+            commit_sha = main_split[1]
+            sub_split = main_split[0].rsplit("-", 1)
+
+            commits = sub_split[1]
+            if commits == "0":
+                commits = None
+
+            # Run the guess logic on the tag portion of the git describe string
+            if version_guess is None:
+                version_guess = utils.guess_version(sub_split[0], pattern=self.guess_pattern)
+
+        return (commit_sha, version_guess, commits)
+
+    def collect_source_info(self):
+        extra_data = None
+        commit_sha, version_guess, commits = self._guess_version()
+        if commits:
+            extra_data = {"commit-offset": commits}
+
+        return [
+            self.create_source_info(
+                self.mirror.url,
+                SourceInfoMedium.GIT,
+                SourceVersionType.COMMIT,
+                commit_sha,
+                version_guess=version_guess,
+                extra_data=extra_data,
+            )
+        ]
+
     ###########################################################
     #                     Local Functions                     #
     ###########################################################
@@ -1010,6 +1137,7 @@ class GitSource(Source):
                 continue
             # Allow configuration to override the upstream location of the submodules.
             submodule.url = self.submodule_overrides.get(submodule.path, submodule.url)
+
             yield submodule
 
     # _recurse_submodules():
