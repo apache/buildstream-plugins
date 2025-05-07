@@ -31,6 +31,7 @@ from buildstream.plugin import CoreWarnings
 from buildstream._testing import cli  # pylint: disable=unused-import
 from buildstream._testing import generate_project, generate_element, load_yaml
 from buildstream._testing import create_repo
+from buildstream import _yaml
 
 from tests.testutils.site import HAVE_GIT, HAVE_OLD_GIT
 
@@ -1146,3 +1147,99 @@ def test_overwrite_rogue_tag_multiple_remotes(cli, tmpdir, datafiles):
 
     result = cli.run(project=project, args=["build", "target.bst"])
     result.assert_success()
+
+
+@pytest.mark.datafiles(os.path.join(DATA_DIR, "source-info"))
+@pytest.mark.parametrize(
+    "target, expected_kind, expected_url, expected_medium, expected_version_type, expected_version, expected_guess_version, expected_offset",
+    [
+        (
+            "no-describe.bst",
+            "git",
+            "https://flying-ponies.com/pony.git",
+            "git",
+            "commit",
+            "40af18f96af0c7f1b56f67339ef53e000e738754",
+            None,
+            None,
+        ),
+        (
+            "describe.bst",
+            "git",
+            "https://flying-ponies.com/pony.git",
+            "git",
+            "commit",
+            "40af18f96af0c7f1b56f67339ef53e000e738754",
+            "3.4",
+            None,
+        ),
+        (
+            "describe-offset.bst",
+            "git",
+            "https://flying-ponies.com/pony.git",
+            "git",
+            "commit",
+            "40af18f96af0c7f1b56f67339ef53e000e738754",
+            "3.4",
+            "7",
+        ),
+        (
+            "describe-custom.bst",
+            "git",
+            "https://flying-ponies.com/pony.git",
+            "git",
+            "commit",
+            "40af18f96af0c7f1b56f67339ef53e000e738754",
+            "3.4.6",
+            None,
+        ),
+        (
+            "override.bst",
+            "git",
+            "https://flying-ponies.com/pony.git",
+            "git",
+            "commit",
+            "40af18f96af0c7f1b56f67339ef53e000e738754",
+            "5.5",
+            None,
+        ),
+    ],
+    ids=["no-describe", "describe", "commit-offset", "custom-pattern", "override"],
+)
+def test_source_info(
+    cli,
+    datafiles,
+    target,
+    expected_url,
+    expected_kind,
+    expected_medium,
+    expected_version_type,
+    expected_version,
+    expected_guess_version,
+    expected_offset,
+):
+    project = str(datafiles)
+    result = cli.run(project=project, silent=True, args=["show", "--format", "%{name}:\n%{source-info}", target])
+    result.assert_success()
+
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence(target)
+    source_info = sources.mapping_at(0)
+
+    assert source_info.get_str("kind") == expected_kind
+    assert source_info.get_str("url") == expected_url
+    assert source_info.get_str("medium") == expected_medium
+    assert source_info.get_str("version-type") == expected_version_type
+    assert source_info.get_str("version") == expected_version
+
+    guess_version = source_info.get_str("version-guess", None)
+    if guess_version or expected_guess_version:
+        assert guess_version == expected_guess_version
+
+    extra_data = source_info.get_mapping("extra-data", None)
+    if extra_data:
+        commit_offset = extra_data.get_str("commit-offset", None)
+    else:
+        commit_offset = None
+
+    assert commit_offset == expected_offset
