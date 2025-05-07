@@ -53,9 +53,31 @@ bzr - stage files from a bazaar repository
    # revision number to the one on the tip of the branch specified in 'track'.
    ref: 6622
 
+   # Specify the version to be reported as the *guess_version* when reporting
+   # SourceInfo
+   #
+   # Since 2.5
+   #
+   version: 1.2
+
 See `built-in functionality doumentation
 <https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins>`_ for
 details on common configuration options for sources.
+
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The bzr source reports the URL of the bzr repository as the *url*.
+
+Further, the bzr source reports the `SourceInfoMedium.BZR
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.BZR>`_
+*medium* and the` `SourceVersionType.COMMIT
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.COMMIT>`_
+*version_type*, for which it reports the bzr revision number as the *version*.
+
+Since the bzr source does not have a way to know what the release version
+corresponds to the revision number, the bzr source exposes the ``version`` configuration
+attribute to allow explicit specification of the *guess_version*.
 """
 
 import os
@@ -66,26 +88,44 @@ from contextlib import contextmanager
 from buildstream import Source, SourceError
 from buildstream import utils
 
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except ImportError:
+    pass
+
 
 class BzrSource(Source):
     # pylint: disable=attribute-defined-outside-init
 
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     def configure(self, node):
-        node.validate_keys(["url", "track", "ref", *Source.COMMON_CONFIG_KEYS])
+        node.validate_keys(["url", "track", "ref", "version", *Source.COMMON_CONFIG_KEYS])
 
         self.original_url = node.get_str("url")
         self.tracking = node.get_str("track")
         self.ref = node.get_str("ref", None)
         self.url = self.translate_url(self.original_url)
+        self.version = node.get_str("version", None)
 
     def preflight(self):
         # Check if bzr is installed, get the binary at the same time.
         self.host_bzr = utils.get_host_tool("bzr")
 
     def get_unique_key(self):
-        return [self.original_url, self.tracking, self.ref]
+        unique_key = [self.original_url, self.tracking, self.ref]
+
+        # Backwards compatible method of supporting configuration
+        # attributes which affect SourceInfo generation.
+        if self.version is not None:
+            unique_key.append(self.version)
+
+        return unique_key
 
     def is_cached(self):
         with self._locked():
@@ -166,6 +206,13 @@ class BzrSource(Source):
                 ],
                 fail="Failed to switch workspace's parent branch to {}".format(url),
             )
+
+    def collect_source_info(self):
+        return [
+            self.create_source_info(
+                self.url, SourceInfoMedium.BAZAAR, SourceVersionType.COMMIT, self.ref, version_guess=self.version
+            )
+        ]
 
     # _locked()
     #
