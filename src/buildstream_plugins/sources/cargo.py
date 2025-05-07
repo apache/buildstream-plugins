@@ -61,6 +61,19 @@ Set the `ref` field to an empty list like so: `ref: []`, and then run
 See `built-in functionality doumentation
 <https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins>`_ for
 details on common configuration options for sources.
+
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The cargo source reports the URL of the archive crates as the *url* for each crate.
+
+Further, the cargo source reports the `SourceInfoMedium.REMOTE_FILE
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.REMOTE_FILE>`_
+*medium* and the `SourceVersionType.SHA256
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.SHA256>`_
+*version_type*, for which it reports the checksum of the archive as the *version*.
+
+The versions extracted from the Cargo.lock at tracking time are used to report the *guess_version*.
 """
 
 import json
@@ -78,6 +91,16 @@ from buildstream import Source, SourceFetcher, SourceError
 from buildstream import utils
 
 from ._utils import download_file
+
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except:
+    pass
 
 
 # This automatically goes into .cargo/config
@@ -132,6 +155,12 @@ class Crate(SourceFetcher):
                 raise SourceError(
                     "File downloaded from {} has sha256sum '{}', not '{}'!".format(crate_url, sha256, self.sha)
                 )
+
+    def get_source_info(self):
+        url, _ = self._get_url()
+        return self.cargo.create_source_info(
+            url, SourceInfoMedium.REMOTE_FILE, SourceVersionType.SHA256, self.sha, version_guess=self.version
+        )
 
     ########################################################
     #        Helper APIs for the Cargo Source to use       #
@@ -334,7 +363,7 @@ class Crate(SourceFetcher):
 
 
 class CargoSource(Source):
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     # We need the Cargo.lock file to construct our ref at track time
     BST_REQUIRES_PREVIOUS_SOURCES_TRACK = True
