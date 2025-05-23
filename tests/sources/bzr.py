@@ -81,3 +81,32 @@ def test_open_bzr_customize(cli, tmpdir, datafiles):
     stripped_url = source_config.get_str("url").lstrip("file:///")
     expected_output_str = "checkout of branch: /{}/{}".format(stripped_url, source_config.get_str("track"))
     assert expected_output_str in str(output)
+
+
+@pytest.mark.datafiles(os.path.join(DATA_DIR))
+def test_show_source_info(cli, tmpdir, datafiles):
+    project = str(datafiles)
+    repo = create_repo("bzr", str(tmpdir))
+    ref = repo.create(os.path.join(project, "basic"))
+
+    # Write out our test target
+    source_config = repo.source_config(ref=ref)
+    source_config["version"] = "1.2.3"
+    element = {"kind": "import", "sources": [source_config]}
+    generate_element(project, "target.bst", element)
+
+    # Get the source info
+    result = cli.run(project=project, args=["show", "--format", "%{name}:\n%{source-info}", "target.bst"])
+    result.assert_success()
+
+    # Check the results
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence("target.bst")
+    source_info = sources.mapping_at(0)
+
+    assert source_info.get_str("kind") == "bzr"
+    assert source_info.get_str("url") == "file://" + repo.repo
+    assert source_info.get_str("medium") == "bzr"
+    assert source_info.get_str("version-type") == "commit"
+    assert source_info.get_str("version") == "1"
+    assert source_info.get_str("version-guess") == "1.2.3"

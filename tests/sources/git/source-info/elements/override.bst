@@ -1,0 +1,7 @@
+kind: import
+
+sources:
+- kind: git
+  url: https://flying-ponies.com/pony.git
+  ref: pony-3.4-0-g40af18f96af0c7f1b56f67339ef53e000e738754
+  version: 5.5

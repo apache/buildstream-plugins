@@ -23,6 +23,8 @@ import pytest
 import responses
 from ruamel.yaml import YAML
 
+from buildstream import _yaml
+
 from buildstream.exceptions import ErrorDomain
 from buildstream._testing import cli  # pylint: disable=unused-import
 
@@ -87,6 +89,30 @@ def test_handle_network_error(cli, datafiles):
     # check that BuildStream still runs normally
     result = cli.run(project=project, args=["show", "dockerhub-alpine.bst"])
     result.assert_success()
+
+
+@pytest.mark.datafiles(DATA_DIR)
+def test_show_source_info(cli, datafiles):
+
+    # Get the source info
+    project = str(datafiles)
+    result = cli.run(project=project, args=["show", "--format", "%{name}:\n%{source-info}", "dockerhub-alpine.bst"])
+    result.assert_success()
+
+    # Check the results
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence("dockerhub-alpine.bst")
+    source_info = sources.mapping_at(0)
+
+    assert source_info.get_str("kind") == "docker"
+    assert source_info.get_str("url") == "https://registry.hub.docker.com"
+    assert source_info.get_str("medium") == "oci-image"
+    assert source_info.get_str("version-type") == "oci-digest"
+    assert source_info.get_str("version") == "sha256:4b8ffaaa896d40622ac10dc6662204f429f1c8c5714be62a6493a7895f664098"
+    assert source_info.get_str("version-guess") == "1.2.3"
+    extra_data = source_info.get_mapping("extra-data", None)
+    assert extra_data is not None
+    assert extra_data.get_str("image-name", "library/alpine")
 
 
 @pytest.mark.datafiles(DATA_DIR)

@@ -198,6 +198,7 @@ def test_pip_source_build(cli, datafiles, setup_pypi_repo):
     pypi_repo = os.path.join(project, "files", "pypi-repo")
     os.makedirs(pypi_repo, exist_ok=True)
     setup_pypi_repo(mock_packages, pypi_repo)
+    realpath_repo = os.path.realpath(pypi_repo)
 
     element = {
         "kind": "manual",
@@ -206,7 +207,7 @@ def test_pip_source_build(cli, datafiles, setup_pypi_repo):
             {"kind": "local", "path": "files/pip-source"},
             {
                 "kind": "pip",
-                "url": "file://{}".format(os.path.realpath(pypi_repo)),
+                "url": "file://{}".format(realpath_repo),
                 "requirements-files": ["myreqs.txt"],
                 "packages": dependencies,
             },
@@ -227,9 +228,39 @@ def test_pip_source_build(cli, datafiles, setup_pypi_repo):
     result = cli.run(project=project, args=["source", "track", element_name])
     assert result.exit_code == 0
 
+    #
+    # Lets sneak in here and test out that Source.collect_source_info() works as expected
+    #
+    # The ref for this generated pip source is:
+    #
+    #    "app2==0.1\napp_3==0.1\napp_4==0.1\napp_5==0.1\napp_no_6==0.1\napp_no_7==0.1\napp_no_8==0.1\nhellolib==0.1"
+    #
+    # Lets just make an assertion on the first dependency app2, which is the second in the list after the local source for this element
+    #
+    result = cli.run(
+        project=project,
+        silent=True,
+        args=["show", "--deps", "none", "--format", "element:\n%{source-info}", element_name],
+    )
+    result.assert_success()
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence("element")
+    source_info = sources.mapping_at(1)
+    assert source_info.get_str("kind") == "pip"
+    assert source_info.get_str("url") == f"file://{realpath_repo}"
+    assert source_info.get_str("medium") == "pypi"
+    assert source_info.get_str("version-type") == "indexed-version"
+    assert source_info.get_str("version") == "0.1"
+    assert source_info.get_str("version-guess") == "0.1"
+    extra_data = source_info.get_mapping("extra-data", None)
+    assert extra_data is not None
+    assert extra_data.get_str("package-name", "app2")
+
+    # Go ahead and build
     result = cli.run(project=project, args=["build", element_name])
     assert result.exit_code == 0
 
+    # Use a build shell to assert the output of something we installed
     result = cli.run(project=project, args=["shell", element_name, "/usr/bin/app1.py"])
     assert result.exit_code == 0
     assert result.output == "Hello App1! This is hellolib\n"

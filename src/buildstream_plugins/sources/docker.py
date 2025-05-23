@@ -57,6 +57,13 @@ docker - stage files from Docker images
    #
    # **Since**: 2.0.1
 
+   # Specify the version to be reported as the *guess_version* when reporting
+   # SourceInfo
+   #
+   # Since: 2.5
+   #
+   version: 1.2
+
 Note that Docker images may contain device nodes. BuildStream elements cannot
 contain device nodes so those will be dropped. Any regular files in the /dev
 directory will also be dropped.
@@ -64,6 +71,32 @@ directory will also be dropped.
 See `built-in functionality doumentation
 <https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins>`_ for
 details on common configuration options for sources.
+
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The docker source reports the URL of the docker registry as the *url*.
+
+Further, the docker source reports the `SourceInfoMedium.OCI_IMAGE
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.OCI_IMAGE>`_
+*medium* and the `SourceVersionType.OCI_DIGEST
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.OCI_DIGEST>`_
+*version_type*, for which it reports the content digest of the docker image as the *version*.
+
+Additionally, the docker source reports the docker image name through
+the ``image-name`` key of the *extra_data*.
+
+As such, after removing the scheme from the URL (i.e. remove ``https://``) the same docker
+image can be obtained by calling:
+
+.. code:: bash
+
+   docker pull <url-without-scheme>/<image-name>@<version>
+
+Since the docker source does not have any way to guess what tag is associated
+to the digest, or what release version that would mean; the docker source exposes
+the ``version`` configuration attribute to allow explicit specification of the
+*guess_version*.
 """
 
 import hashlib
@@ -83,6 +116,16 @@ from buildstream.utils import (
     link_files,
     move_atomic,
 )
+
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except ImportError:
+    pass
 
 _DOCKER_HUB_URL = "https://registry.hub.docker.com"
 
@@ -342,7 +385,7 @@ class ReadableTarInfo(tarfile.TarInfo):
 class DockerSource(Source):
     # pylint: disable=too-many-instance-attributes
 
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     # Docker identifies images by a content digest calculated from the image's
     # manifest. This corresponds well with the concept of a 'ref' in
@@ -365,7 +408,8 @@ class DockerSource(Source):
         # url is deprecated, but accept it as a valid key so that we can raise
         # a nicer warning.
         node.validate_keys(
-            Source.COMMON_CONFIG_KEYS + ["architecture", "registry-url", "image", "os", "ref", "track", "url"]
+            Source.COMMON_CONFIG_KEYS
+            + ["architecture", "registry-url", "image", "os", "ref", "track", "url", "version"]
         )
 
         if "url" in node and ("image" in node or "registry-url" in node):
@@ -391,6 +435,7 @@ class DockerSource(Source):
 
         self.architecture = node.get_str("architecture", "") or default_architecture()
         self.os = node.get_str("os", "") or default_os()
+        self.version = node.get_str("version", None)
 
         self.digest = None
         self.load_ref(node)
@@ -409,9 +454,16 @@ class DockerSource(Source):
 
     def get_unique_key(self):
         if self.url is not None:
-            return [self.url, self.digest]
+            unique_key = [self.url, self.digest]
         else:
-            return [self.original_registry_url, self.image, self.digest]
+            unique_key = [self.original_registry_url, self.image, self.digest]
+
+        # Backwards compatible method of supporting configuration
+        # attributes which affect SourceInfo generation.
+        if self.version is not None:
+            unique_key.append(self.version)
+
+        return unique_key
 
     def get_ref(self):
         return None if self.digest is None else self._digest_to_ref(self.digest)
@@ -582,6 +634,28 @@ class DockerSource(Source):
 
         except (OSError, SourceError, tarfile.TarError) as e:
             raise SourceError("{}: Error staging source: {}".format(self, e)) from e
+
+    def collect_source_info(self):
+
+        # If the image was configured with "url" only rather
+        # than "registry-url" and "image", then self.image
+        # at this point will have a leading forward slash "/".
+        #
+        # Lets just normalize that problem here, as changing
+        # the self.image itself can break cache keys.
+        #
+        image_name = self.image.lstrip("/")
+
+        return [
+            self.create_source_info(
+                self.registry_url,
+                SourceInfoMedium.OCI_IMAGE,
+                SourceVersionType.OCI_DIGEST,
+                self.digest,
+                version_guess=self.version,
+                extra_data={"image-name": image_name},
+            )
+        ]
 
     @staticmethod
     def _get_extract_and_remove_files(layer_tar_path):

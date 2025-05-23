@@ -45,17 +45,41 @@ patch - apply locally stored patches
 See `built-in functionality doumentation
 <https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins>`_ for
 details on common configuration options for sources.
+
+
+Reporting `SourceInfo <https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The patch source reports the project relative path of the patch file as the *url*.
+
+Further, the patch source reports the `SourceInfoMedium.LOCAL
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.LOCAL>`_
+*medium* and the `SourceVersionType.SHA256
+<https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.SHA256>`_
+*version_type*, for which it reports the sha256 checksum of the patch file as the *version*.
+
+The *guess_version* of a patch source is meaningless, as it is tied instead to
+the BuildStream project in which it is contained.
 """
 
 import os
 from buildstream import Source, SourceError
 from buildstream import utils
 
+#
+# Soft import of buildstream symbols only available in newer versions
+#
+# The BST_MIN_VERSION will provide a better user experience.
+#
+try:
+    from buildstream import SourceInfoMedium, SourceVersionType
+except ImportError:
+    pass
+
 
 class PatchSource(Source):
     # pylint: disable=attribute-defined-outside-init
 
-    BST_MIN_VERSION = "2.0"
+    BST_MIN_VERSION = "2.5"
 
     BST_REQUIRES_PREVIOUS_SOURCES_STAGE = True
 
@@ -64,13 +88,15 @@ class PatchSource(Source):
         self.path = self.node_get_project_path(node.get_scalar("path"), check_is_file=True)
         self.strip_level = node.get_int("strip-level", default=1)
         self.fullpath = os.path.join(self.get_project_directory(), self.path)
+        self.sha256 = None
 
     def preflight(self):
         # Check if patch is installed, get the binary at the same time
         self.host_patch = utils.get_host_tool("patch")
 
     def get_unique_key(self):
-        return [self.path, utils.sha256sum(self.fullpath), self.strip_level]
+        self.sha256 = utils.sha256sum(self.fullpath)
+        return [self.path, self.sha256, self.strip_level]
 
     def is_resolved(self):
         return True
@@ -113,6 +139,9 @@ class PatchSource(Source):
                 ],
                 fail="Failed to apply patch {}".format(self.path),
             )
+
+    def collect_source_info(self):
+        return [self.create_source_info(self.path, SourceInfoMedium.LOCAL, SourceVersionType.SHA256, self.sha256)]
 
 
 # Plugin entry point

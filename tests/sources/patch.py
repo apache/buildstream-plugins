@@ -19,6 +19,8 @@ import os
 import socket
 import pytest
 
+from buildstream import _yaml
+
 from buildstream.exceptions import ErrorDomain, LoadErrorReason
 from buildstream._testing import cli  # pylint: disable=unused-import
 
@@ -212,3 +214,23 @@ def test_patch_strip_level(cli, tmpdir, datafiles):
     # Test the file.txt was patched and changed
     with open(os.path.join(checkoutdir, "file.txt"), encoding="utf-8") as f:
         assert f.read() == "This is text file with superpowers\n"
+
+
+@pytest.mark.datafiles(os.path.join(DATA_DIR, "basic"))
+def test_show_source_info(cli, tmpdir, datafiles):
+    # Get the source info
+    project = str(datafiles)
+    result = cli.run(project=project, args=["show", "--format", "%{name}:\n%{source-info}", "target.bst"])
+    result.assert_success()
+
+    # Check the results of the patch source, which will be second in the list after the local file
+    loaded = _yaml.load_data(result.output)
+    sources = loaded.get_sequence("target.bst")
+    source_info = sources.mapping_at(1)
+
+    assert source_info.get_str("kind") == "patch"
+    assert source_info.get_str("url") == "file_1.patch"
+    assert source_info.get_str("medium") == "local"
+    assert source_info.get_str("version-type") == "sha256"
+    assert source_info.get_str("version") == "063fbc138d30a2f2ea8f3cd53810824520ff3971d752235c70f17c67fefca0f1"
+    assert source_info.get_str("version-guess", None) is None
