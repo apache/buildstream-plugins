@@ -1,4 +1,13 @@
 =========================
+buildstream-plugins 2.5.0
+=========================
+
+ o Drop support for python 3.8 and add support for python 3.13 (#84)
+
+ o Implement Source.collect_source_info() or SourceFetcher.get_source_info() on
+   all source plugins (#87)
+
+=========================
 buildstream-plugins 2.4.0
 =========================
 
