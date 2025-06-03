@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>setuptools plugin &mdash; BuildStream Plugins 2.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=3c4615cf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="bzr plugin" href="../sources/bzr.html" />
+    <link rel="prev" title="pip plugin" href="pip.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BuildStream Plugins
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Element Plugins</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="autotools.html">autotools plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake.html">cmake plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="make.html">make plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meson.html">meson plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pip.html">pip plugin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">setuptools plugin</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setuptools-python-setuptools-element">setuptools - Python setuptools element</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sources/bzr.html">bzr plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources/cargo.html">cargo plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources/docker.html">docker plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources/git.html">git plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources/patch.html">patch plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources/pip.html">pip plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Mirror Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/simple_mirror.html">simple_mirror plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/gitlab_lfs_mirror.html">gitlab_lfs_mirror plugin</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BuildStream Plugins</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">setuptools plugin</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/elements/setuptools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-elements.setuptools">
+<span id="setuptools-plugin"></span><h1>setuptools plugin<a class="headerlink" href="#module-elements.setuptools" title="Link to this heading"></a></h1>
+<section id="setuptools-python-setuptools-element">
+<h2>setuptools - Python setuptools element<a class="headerlink" href="#setuptools-python-setuptools-element" title="Link to this heading"></a></h2>
+<p>A <a class="reference external" href="https://docs.buildstream.build/master/buildstream.buildelement.html#module-buildstream.buildelement">BuildElement</a>
+implementation for using python setuptools</p>
+<dl>
+<dt>The setuptools default configuration:</dt><dd><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1">#  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#  you may not use this file except in compliance with the License.</span>
+<span class="c1">#  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#  Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#  See the License for the specific language governing permissions and</span>
+<span class="c1">#  limitations under the License.</span>
+
+<span class="c1"># Default python distutils configuration</span>
+
+<span class="nt">variables</span><span class="p">:</span>
+
+<span class="w">  </span><span class="c1"># When building for python2 distutils, simply</span>
+<span class="w">  </span><span class="c1"># override this in the element declaration</span>
+<span class="w">  </span><span class="nt">python</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python3</span>
+
+<span class="w">  </span><span class="nt">python-build</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+
+<span class="w">    </span><span class="no">%{python} %{conf-root}/setup.py build</span>
+
+<span class="w">  </span><span class="nt">install-args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+
+<span class="w">    </span><span class="no">--prefix &quot;%{prefix}&quot; \</span>
+<span class="w">    </span><span class="no">--root &quot;%{install-root}&quot;</span>
+
+<span class="w">  </span><span class="nt">python-install</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+
+<span class="w">    </span><span class="no">%{python} %{conf-root}/setup.py install %{install-args}</span>
+
+
+<span class="nt">config</span><span class="p">:</span>
+
+<span class="w">  </span><span class="c1"># Commands for configuring the software</span>
+<span class="w">  </span><span class="c1">#</span>
+<span class="w">  </span><span class="nt">configure-commands</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+
+<span class="w">  </span><span class="c1"># Commands for building the software</span>
+<span class="w">  </span><span class="c1">#</span>
+<span class="w">  </span><span class="nt">build-commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">%{python-build}</span>
+
+<span class="w">  </span><span class="c1"># Commands for installing the software into a</span>
+<span class="w">  </span><span class="c1"># destination folder</span>
+<span class="w">  </span><span class="c1">#</span>
+<span class="w">  </span><span class="nt">install-commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">%{python-install}</span>
+
+<span class="w">  </span><span class="c1"># Commands for stripping debugging information out of</span>
+<span class="w">  </span><span class="c1"># installed binaries</span>
+<span class="w">  </span><span class="c1">#</span>
+<span class="w">  </span><span class="nt">strip-commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">%{strip-binaries}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>See <a class="reference external" href="https://docs.buildstream.build/master/buildstream.buildelement.html#core-buildelement-builtins">built-in functionality documentation</a> for
+details on common configuration options for build elements.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pip.html" class="btn btn-neutral float-left" title="pip plugin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sources/bzr.html" class="btn btn-neutral float-right" title="bzr plugin" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, The Apache Software Foundation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

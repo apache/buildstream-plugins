@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bzr plugin &mdash; BuildStream Plugins 2.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=3c4615cf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="cargo plugin" href="cargo.html" />
+    <link rel="prev" title="setuptools plugin" href="../elements/setuptools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BuildStream Plugins
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Element Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../elements/autotools.html">autotools plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/cmake.html">cmake plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/make.html">make plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/meson.html">meson plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/pip.html">pip plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/setuptools.html">setuptools plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Plugins</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">bzr plugin</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bzr-stage-files-from-a-bazaar-repository">bzr - stage files from a bazaar repository</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reporting-sourceinfo">Reporting SourceInfo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cargo.html">cargo plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">docker plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="git.html">git plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="patch.html">patch plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pip.html">pip plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Mirror Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/simple_mirror.html">simple_mirror plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/gitlab_lfs_mirror.html">gitlab_lfs_mirror plugin</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BuildStream Plugins</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">bzr plugin</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sources/bzr.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-sources.bzr">
+<span id="bzr-plugin"></span><h1>bzr plugin<a class="headerlink" href="#module-sources.bzr" title="Link to this heading"></a></h1>
+<section id="bzr-stage-files-from-a-bazaar-repository">
+<h2>bzr - stage files from a bazaar repository<a class="headerlink" href="#bzr-stage-files-from-a-bazaar-repository" title="Link to this heading"></a></h2>
+<p><strong>Host dependencies:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>bzr</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Usage:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify the bzr source kind</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bzr</span>
+
+<span class="c1"># Specify the bzr url. Bazaar URLs come in many forms, see</span>
+<span class="c1"># `bzr help urlspec` for more information. Using an alias defined</span>
+<span class="c1"># in your project configuration is encouraged.</span>
+<span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://launchpad.net/bzr</span>
+
+<span class="c1"># Specify the tracking branch. This is mandatory, as bzr cannot identify</span>
+<span class="c1"># an individual revision outside its branch. bzr URLs that omit the branch</span>
+<span class="c1"># name implicitly specify the trunk branch, but bst requires this to be</span>
+<span class="c1"># explicit.</span>
+<span class="nt">track</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trunk</span>
+
+<span class="c1"># Specify the ref. This is a revision number. This is usually a decimal,</span>
+<span class="c1"># but revisions on a branch are of the form</span>
+<span class="c1"># &lt;revision-branched-from&gt;.&lt;branch-number&gt;.&lt;revision-since-branching&gt;</span>
+<span class="c1"># e.g. 6622.1.6.</span>
+<span class="c1"># The ref must be specified to build, and &#39;bst source track&#39; will update the</span>
+<span class="c1"># revision number to the one on the tip of the branch specified in &#39;track&#39;.</span>
+<span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6622</span>
+
+<span class="c1"># Specify the version to be reported as the *guess_version* when reporting</span>
+<span class="c1"># SourceInfo</span>
+<span class="c1">#</span>
+<span class="c1"># Since 2.5</span>
+<span class="c1">#</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.2</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins">built-in functionality doumentation</a> for
+details on common configuration options for sources.</p>
+<section id="reporting-sourceinfo">
+<h3>Reporting <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo">SourceInfo</a><a class="headerlink" href="#reporting-sourceinfo" title="Link to this heading"></a></h3>
+<p>The bzr source reports the URL of the bzr repository as the <em>url</em>.</p>
+<p>Further, the bzr source reports the <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.BZR">SourceInfoMedium.BZR</a>
+<em>medium</em> and the` <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.COMMIT">SourceVersionType.COMMIT</a>
+<em>version_type</em>, for which it reports the bzr revision number as the <em>version</em>.</p>
+<p>Since the bzr source does not have a way to know what the release version
+corresponds to the revision number, the bzr source exposes the <code class="docutils literal notranslate"><span class="pre">version</span></code> configuration
+attribute to allow explicit specification of the <em>guess_version</em>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../elements/setuptools.html" class="btn btn-neutral float-left" title="setuptools plugin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cargo.html" class="btn btn-neutral float-right" title="cargo plugin" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, The Apache Software Foundation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
