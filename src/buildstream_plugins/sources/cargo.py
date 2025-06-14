@@ -99,7 +99,7 @@ from ._utils import download_file
 #
 try:
     from buildstream import SourceInfoMedium, SourceVersionType
-except:
+except ImportError:
     pass
 
 
