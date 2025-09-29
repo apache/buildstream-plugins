@@ -2,6 +2,8 @@ BuildStream Plugins
 ===================
 A collection of plugins for the `BuildStream <https://buildstream.build>`_ project.
 
+Each plugin carries documentation in its source code. You can also
+`read the documentation in your browser <https://apache.github.io/buildstream-plugins/>`_.
 
 How to use plugins
 ------------------
