@@ -35,7 +35,7 @@ variables:
 
     cmake -B%{build-dir} -H"%{conf-root}" -G"%{generator}" %{cmake-args}
 
-  make: cmake --build %{build-dir} -- ${JOBS}
+  make: cmake --build %{build-dir}
   make-install: env DESTDIR="%{install-root}" cmake %{build-dir} --install
 
   # Set this if the sources cannot handle parallelization.
@@ -72,9 +72,9 @@ config:
 
 # Use max-jobs CPUs for building and enable verbosity
 environment:
-  JOBS: -j%{max-jobs}
+  CMAKE_BUILD_PARALLEL_LEVEL: %{max-jobs}
 
-# And dont consider JOBS as something which may
+# And dont consider CMAKE_BUILD_PARALLEL_LEVEL as something which may
 # affect build output.
 environment-nocache:
-- JOBS
+- CMAKE_BUILD_PARALLEL_LEVEL
