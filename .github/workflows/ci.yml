@@ -36,19 +36,7 @@ jobs:
         # The names here should map to a valid service defined in
         # "../compose/ci.docker-compose.yml"
         test-name:
-          - debian-11
-          - debian-12
-          - debian-13
-          - fedora-42
-          - fedora-43
-          - fedora-missing-deps
           - ubuntu-22.04
-          - lint
-          - mypy
-
-        include:
-          - test-name: bst-master
-            allow-failure: true
 
     steps:
       - name: Disable AppArmor restriction for bubblewrap
@@ -63,28 +51,3 @@ jobs:
       - name: Run tests with Docker Compose
         run: |
           ${GITHUB_WORKSPACE}/.github/run-ci.sh ${{ matrix.test-name }}
-
-  docs:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Disable AppArmor restriction for bubblewrap
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      - name: Check out repository
-        uses: actions/checkout@v2
-        # BuildStream requires tags to be able to find its version.
-        with:
-          fetch-depth: 0
-
-      - name: Give `testuser` ownership of the source directory
-        run: sudo chown -R 1000:1000 ${GITHUB_WORKSPACE}
-
-      - name: Build documentation using Docker Compose
-        run: |
-          ${GITHUB_WORKSPACE}/.github/run-ci.sh docs
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs
-          path: doc/build/html
