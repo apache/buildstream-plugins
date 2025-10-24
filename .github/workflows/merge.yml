@@ -8,8 +8,11 @@ on:
 jobs:
   build:
     name: Build documentation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
+    - name: Disable AppArmor restriction for bubblewrap
+      run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
     - name: Checkout code
       uses: actions/checkout@v2
       # BuildStream requires tags to be able to find its version.
@@ -40,8 +43,11 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
+
+    - name: Disable AppArmor restriction for bubblewrap
+      run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
     - name: Download artifact
       uses: actions/download-artifact@v4
