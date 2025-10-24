@@ -106,6 +106,7 @@ import platform
 import shutil
 import tarfile
 import urllib.parse
+import base64
 
 import requests
 
@@ -168,23 +169,78 @@ def urljoin(url, *args):
     return url
 
 
+def _load_docker_config_credentials(registry_url):
+    """
+    Loads credentials for a given registry from $DOCKER_CONFIG/config.json or ~/.docker/config.json.
+    Returns a tuple of (username, password) or None if not found.
+    """
+    docker_config_path = os.environ.get("DOCKER_CONFIG", os.path.expanduser("~/.docker"))
+    config_file = os.path.join(docker_config_path, "config.json")
+    if not os.path.exists(config_file):
+        return None
+
+    try:
+        with open(config_file, "r") as f:
+            config = json.load(f)
+        auths = config.get("auths", {})
+        # Accept both with or without scheme
+        # Normalize the registry urls for matching
+        candidates = [
+            registry_url,
+            registry_url.lstrip("https://").lstrip("http://"),
+            "https://" + registry_url.lstrip("https://").lstrip("http://"),
+            "http://" + registry_url.lstrip("https://").lstrip("http://"),
+        ]
+        for key in auths:
+            for candidate in candidates:
+                # Exact match or registry host match
+                if key == candidate or key == urllib.parse.urlparse(candidate).netloc:
+                    auth_entry = auths[key]
+                    if "auth" in auth_entry:
+                        auth_b64 = auth_entry["auth"]
+                        auth_decoded = base64.b64decode(auth_b64).decode("utf-8")
+                        username, password = auth_decoded.split(":", 1)
+                        return username, password
+                    # Support for 'username' and 'password' fields
+                    if "username" in auth_entry and "password" in auth_entry:
+                        return auth_entry["username"], auth_entry["password"]
+        return None
+    except Exception:
+        return None
+
 # Handles authentication with a bearer token
 class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, api_timeout=3):
+    def __init__(self, api_timeout=3, registry_url=None):
         self.token = None
         self.api_timeout = api_timeout
+
+        self.username = None
+        self.password = None
+        if registry_url:
+            creds = _load_docker_config_credentials(registry_url)
+            if creds:
+                self.username, self.password = creds
 
     def __call__(self, r):
         if self.token:
             r.headers["Authorization"] = "Bearer {}".format(self.token)
+        elif self.username and self.password:
+            # Set HTTP Basic Auth header if token is not yet available
+            userpass = "{}:{}".format(self.username, self.password).encode("utf-8")
+            r.headers["Authorization"] = "Basic {}".format(base64.b64encode(userpass).decode("utf-8"))
         return r
 
     def refresh_token(self, auth_challenge):
         auth_vars = parse_bearer_authorization_challenge(auth_challenge)
-        # Respond to an Www-Authenticate challenge by requesting the necessary
-        # token from the 'realm' (endpoint) that we were given in the challenge.
         request_url = "{realm}?service={service}&scope={scope}".format(**auth_vars)
-        response = requests.get(request_url, timeout=self.api_timeout)
+
+        headers = {}
+        # If username and password are available, use HTTP Basic Auth for token endpoint
+        if self.username and self.password:
+            userpass = "{}:{}".format(self.username, self.password).encode("utf-8")
+            headers["Authorization"] = "Basic {}".format(base64.b64encode(userpass).decode("utf-8"))
+
+        response = requests.get(request_url, timeout=self.api_timeout, headers=headers)
         response.raise_for_status()
         self.token = response.json()["token"]
 
@@ -205,7 +261,7 @@ class DockerRegistryV2Client:
         self.endpoint = endpoint
         self.api_timeout = api_timeout
 
-        self.auth = BearerAuth(api_timeout)
+        self.auth = BearerAuth(api_timeout, endpoint)
 
     def _request(self, subpath, extra_headers=None, stream=False, _reauthorized=False):
         if not extra_headers:
@@ -279,6 +335,8 @@ class DockerRegistryV2Client:
         accept_types = [
             "application/vnd.docker.distribution.manifest.v2+json",
             "application/vnd.docker.distribution.manifest.list.v2+json",
+            "application/vnd.oci.image.index.v1+json",
+            "application/vnd.oci.image.manifest.v1+json",
         ]
 
         manifest_url = urljoin(image_path, "manifests", urllib.parse.quote(reference))
@@ -316,8 +374,11 @@ class DockerRegistryV2Client:
                 manifest=response.text,
             )
 
-        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.list.v2+json":
-            # This is a "fat manifest", we need to narrow down to a specific
+        if manifest["mediaType"] in (
+            "application/vnd.docker.distribution.manifest.list.v2+json",
+            "application/vnd.oci.image.index.v1+json",
+        ):
+            # This is an "index", we need to narrow down to a specific
             # architecture.
             for sub in manifest["manifests"]:
                 if sub["platform"]["architecture"] == architecture and sub["platform"]["os"]:
@@ -332,7 +393,10 @@ class DockerRegistryV2Client:
                 "No images found for architecture {}, OS {}".format(architecture, os_),
                 manifest=response.text,
             )
-        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
+        elif manifest["mediaType"] in (
+            "application/vnd.docker.distribution.manifest.v2+json",
+            "application/vnd.oci.image.manifest.v1+json",
+        ):
             return response.text, our_digest
         else:
             raise DockerManifestError(
@@ -570,7 +634,10 @@ class DockerSource(Source):
                     raise SourceError(e) from e
 
                 for layer in manifest["layers"]:
-                    if layer["mediaType"] != "application/vnd.docker.image.rootfs.diff.tar.gzip":
+                    if layer["mediaType"] not in (
+                        "application/vnd.docker.image.rootfs.diff.tar.gzip",
+                        "application/vnd.oci.image.layer.v1.tar+gzip",
+                    ):
                         raise SourceError("Unsupported layer type: {}".format(layer["mediaType"]))
 
                     layer_digest = layer["digest"]
@@ -727,3 +794,4 @@ class DockerSource(Source):
 # Plugin entry point
 def setup():
     return DockerSource
+
