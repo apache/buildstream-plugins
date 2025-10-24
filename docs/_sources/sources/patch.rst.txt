@@ -1,0 +1,4 @@
+patch plugin
+============================================
+
+.. automodule:: sources.patch

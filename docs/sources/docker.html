@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>docker plugin &mdash; BuildStream Plugins 2.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=3c4615cf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="git plugin" href="git.html" />
+    <link rel="prev" title="cargo plugin" href="cargo.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BuildStream Plugins
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Element Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../elements/autotools.html">autotools plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/cmake.html">cmake plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/make.html">make plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/meson.html">meson plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/pip.html">pip plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/setuptools.html">setuptools plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Plugins</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bzr.html">bzr plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cargo.html">cargo plugin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">docker plugin</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docker-stage-files-from-docker-images">docker - stage files from Docker images</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reporting-sourceinfo">Reporting SourceInfo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="git.html">git plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="patch.html">patch plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pip.html">pip plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Mirror Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/simple_mirror.html">simple_mirror plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/gitlab_lfs_mirror.html">gitlab_lfs_mirror plugin</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BuildStream Plugins</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">docker plugin</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sources/docker.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-sources.docker">
+<span id="docker-plugin"></span><h1>docker plugin<a class="headerlink" href="#module-sources.docker" title="Link to this heading"></a></h1>
+<section id="docker-stage-files-from-docker-images">
+<h2>docker - stage files from Docker images<a class="headerlink" href="#docker-stage-files-from-docker-images" title="Link to this heading"></a></h2>
+<p><strong>Usage:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify the docker source kind</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker</span>
+
+<span class="c1"># Specify the registry endpoint, defaults to Docker Hub (optional)</span>
+<span class="nt">registry-url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://registry.hub.docker.com</span>
+
+<span class="c1"># Image path</span>
+<span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">library/alpine</span>
+
+<span class="c1"># Alternatively, you can specify a full url, the registry endpoint</span>
+<span class="c1"># is assumed to be at the root of the domain</span>
+<span class="c1"># url: https://registry.hub.docker.com/library/alpine</span>
+
+<span class="c1"># Image tag to follow (optional)</span>
+<span class="nt">track</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">latest</span>
+
+<span class="c1"># Specify the digest of the exact image to use (required)</span>
+<span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6c9f6f68a131ec6381da82f2bff978083ed7f4f7991d931bfa767b7965ebc94b</span>
+
+<span class="c1"># Some images are built for multiple platforms. When tracking a tag, we</span>
+<span class="c1"># will choose which image to use based on these settings. Default values</span>
+<span class="c1"># are chosen based on the output of `uname -m` and `uname -s`, but you</span>
+<span class="c1"># can override them.</span>
+<span class="c1">#</span>
+<span class="c1"># architecture: arm64</span>
+<span class="c1"># os: linux</span>
+<span class="c1">#</span>
+<span class="c1"># **Since**: 2.0.1</span>
+
+<span class="c1"># Specify the version to be reported as the *guess_version* when reporting</span>
+<span class="c1"># SourceInfo</span>
+<span class="c1">#</span>
+<span class="c1"># Since: 2.5</span>
+<span class="c1">#</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.2</span>
+</pre></div>
+</div>
+<p>Note that Docker images may contain device nodes. BuildStream elements cannot
+contain device nodes so those will be dropped. Any regular files in the /dev
+directory will also be dropped.</p>
+<p>See <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins">built-in functionality doumentation</a> for
+details on common configuration options for sources.</p>
+<section id="reporting-sourceinfo">
+<h3>Reporting <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo">SourceInfo</a><a class="headerlink" href="#reporting-sourceinfo" title="Link to this heading"></a></h3>
+<p>The docker source reports the URL of the docker registry as the <em>url</em>.</p>
+<p>Further, the docker source reports the <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.OCI_IMAGE">SourceInfoMedium.OCI_IMAGE</a>
+<em>medium</em> and the <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.OCI_DIGEST">SourceVersionType.OCI_DIGEST</a>
+<em>version_type</em>, for which it reports the content digest of the docker image as the <em>version</em>.</p>
+<p>Additionally, the docker source reports the docker image name through
+the <code class="docutils literal notranslate"><span class="pre">image-name</span></code> key of the <em>extra_data</em>.</p>
+<p>As such, after removing the scheme from the URL (i.e. remove <code class="docutils literal notranslate"><span class="pre">https://</span></code>) the same docker
+image can be obtained by calling:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>pull<span class="w"> </span>&lt;url-without-scheme&gt;/&lt;image-name&gt;@&lt;version&gt;
+</pre></div>
+</div>
+<p>Since the docker source does not have any way to guess what tag is associated
+to the digest, or what release version that would mean; the docker source exposes
+the <code class="docutils literal notranslate"><span class="pre">version</span></code> configuration attribute to allow explicit specification of the
+<em>guess_version</em>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cargo.html" class="btn btn-neutral float-left" title="cargo plugin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="git.html" class="btn btn-neutral float-right" title="git plugin" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, The Apache Software Foundation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

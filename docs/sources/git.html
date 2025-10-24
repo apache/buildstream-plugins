@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>git plugin &mdash; BuildStream Plugins 2.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=3c4615cf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="patch plugin" href="patch.html" />
+    <link rel="prev" title="docker plugin" href="docker.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BuildStream Plugins
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Element Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../elements/autotools.html">autotools plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/cmake.html">cmake plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/make.html">make plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/meson.html">meson plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/pip.html">pip plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../elements/setuptools.html">setuptools plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Plugins</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bzr.html">bzr plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cargo.html">cargo plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">docker plugin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">git plugin</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#git-stage-files-from-a-git-repository">git - stage files from a git repository</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configurable-warnings">Configurable Warnings:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reporting-sourceinfo">Reporting SourceInfo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="patch.html">patch plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pip.html">pip plugin</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Source Mirror Plugins</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/simple_mirror.html">simple_mirror plugin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sourcemirrors/gitlab_lfs_mirror.html">gitlab_lfs_mirror plugin</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BuildStream Plugins</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">git plugin</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sources/git.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-sources.git">
+<span id="git-plugin"></span><h1>git plugin<a class="headerlink" href="#module-sources.git" title="Link to this heading"></a></h1>
+<section id="git-stage-files-from-a-git-repository">
+<h2>git - stage files from a git repository<a class="headerlink" href="#git-stage-files-from-a-git-repository" title="Link to this heading"></a></h2>
+<p><strong>Host dependencies:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>git</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Note that this plugin <strong>will checkout git submodules by default</strong>; even if
+they are not specified in the <cite>.bst</cite> file.</p>
+</div>
+<p><strong>Usage:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify the git source kind</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git</span>
+
+<span class="c1"># Specify the repository url, using an alias defined</span>
+<span class="c1"># in your project configuration is recommended.</span>
+<span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upstream:foo.git</span>
+
+<span class="c1"># Optionally specify a symbolic tracking branch or tag, this</span>
+<span class="c1"># will be used to update the &#39;ref&#39; when refreshing the pipeline.</span>
+<span class="nt">track</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">master</span>
+
+<span class="c1"># Optionally specify the ref format used for tracking.</span>
+<span class="c1"># The default is &#39;sha1&#39; for the raw commit hash.</span>
+<span class="c1"># If you specify &#39;git-describe&#39;, the commit hash will be prefixed</span>
+<span class="c1"># with the closest tag.</span>
+<span class="nt">ref-format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sha1</span>
+
+<span class="c1"># Specify the commit ref, this must be specified in order to</span>
+<span class="c1"># checkout sources and build, but can be automatically updated</span>
+<span class="c1"># if the &#39;track&#39; attribute was specified.</span>
+<span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">d63cbb6fdc0bbdadc4a1b92284826a6d63a7ebcd</span>
+
+<span class="c1"># Optionally specify whether submodules should be checked-out.</span>
+<span class="c1"># This is done recursively, as with `git clone --recurse-submodules`.</span>
+<span class="c1"># If not set, this will default to &#39;True&#39;</span>
+<span class="nt">checkout-submodules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+
+<span class="c1"># If your repository has submodules, explicitly specifying the</span>
+<span class="c1"># url from which they are to be fetched allows you to easily</span>
+<span class="c1"># rebuild the same sources from a different location. This is</span>
+<span class="c1"># especially handy when used with project defined aliases which</span>
+<span class="c1"># can be redefined at a later time, or overridden with mirrors.</span>
+<span class="c1">#</span>
+<span class="c1"># You may also explicitly specify whether to check out this</span>
+<span class="c1"># submodule. If &#39;checkout&#39; is set, it will control whether to</span>
+<span class="c1"># checkout that submodule and recurse into it. It defaults to the</span>
+<span class="c1"># value of &#39;checkout-submodules&#39;.</span>
+<span class="nt">submodules</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">plugins/bar</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upstream:bar.git</span>
+<span class="w">    </span><span class="nt">checkout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">  </span><span class="nt">plugins/bar/quux</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">checkout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">  </span><span class="nt">plugins/baz</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">upstream:baz.git</span>
+<span class="w">    </span><span class="nt">checkout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+
+<span class="c1"># Modify the default version guessing pattern</span>
+<span class="c1">#</span>
+<span class="c1"># Since 2.5</span>
+<span class="c1">#</span>
+<span class="nt">version-guess-pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;(\d+)\.(\d+)(?:\.(\d+))?&#39;</span>
+
+<span class="c1"># Override the version guessing with an explicit version</span>
+<span class="c1">#</span>
+<span class="c1"># Since 2.5</span>
+<span class="c1">#</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.9</span>
+
+<span class="c1"># Enable tag tracking.</span>
+<span class="c1">#</span>
+<span class="c1"># This causes the `tags` metadata to be populated automatically</span>
+<span class="c1"># as a result of tracking the git source.</span>
+<span class="c1">#</span>
+<span class="c1"># By default this is &#39;False&#39;.</span>
+<span class="c1">#</span>
+<span class="nt">track-tags</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+
+<span class="c1"># If the list of tags below is set, then a lightweight dummy</span>
+<span class="c1"># git repository will be staged along with the content at</span>
+<span class="c1"># build time.</span>
+<span class="c1">#</span>
+<span class="c1"># This is useful for a growing number of modules which use</span>
+<span class="c1"># `git describe` at build time in order to determine the version</span>
+<span class="c1"># which will be encoded into the built software.</span>
+<span class="c1">#</span>
+<span class="c1"># The &#39;tags&#39; below is considered as a part of the git source</span>
+<span class="c1"># reference and will be stored in the &#39;project.refs&#39; file if</span>
+<span class="c1"># that has been selected as your project&#39;s ref-storage.</span>
+<span class="c1">#</span>
+<span class="c1"># Migration notes:</span>
+<span class="c1">#</span>
+<span class="c1">#   If you are upgrading from BuildStream 1.2, which used to</span>
+<span class="c1">#   stage the entire repository by default, you will notice that</span>
+<span class="c1">#   some modules which use `git describe` are broken, and will</span>
+<span class="c1">#   need to enable this feature in order to fix them.</span>
+<span class="c1">#</span>
+<span class="c1">#   If you need to enable this feature without changing the</span>
+<span class="c1">#   the specific commit that you are building, then we recommend</span>
+<span class="c1">#   the following migration steps for any git sources where</span>
+<span class="c1">#   `git describe` is required:</span>
+<span class="c1">#</span>
+<span class="c1">#     o Enable `track-tags` feature</span>
+<span class="c1">#     o Set the `track` parameter to the desired commit sha which</span>
+<span class="c1">#       the current `ref` points to</span>
+<span class="c1">#     o Run `bst source track` for these elements, this will result in</span>
+<span class="c1">#       populating the `tags` portion of the refs without changing</span>
+<span class="c1">#       the refs</span>
+<span class="c1">#     o Restore the `track` parameter to the branches which you have</span>
+<span class="c1">#       previously been tracking afterwards.</span>
+<span class="c1">#</span>
+<span class="nt">tags</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lightweight-example</span>
+<span class="w">  </span><span class="nt">commit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">04ad0dc656cb7cc6feb781aa13bdbf1d67d0af78</span>
+<span class="w">  </span><span class="nt">annotated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">annotated-example</span>
+<span class="w">  </span><span class="nt">commit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10abe77fe8d77385d86f225b503d9185f4ef7f3a</span>
+<span class="w">  </span><span class="nt">annotated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#core-source-builtins">built-in functionality doumentation</a> for
+details on common configuration options for sources.</p>
+<section id="configurable-warnings">
+<h3>Configurable Warnings:<a class="headerlink" href="#configurable-warnings" title="Link to this heading"></a></h3>
+<p>This plugin provides the following
+<a class="reference external" href="https://docs.buildstream.build/master/format_project.html#configurable-warnings">configurable warnings</a>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">git:inconsistent-submodule</span></code> - A submodule present in the git repository’s .gitmodules was never
+added with <cite>git submodule add</cite>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git:unlisted-submodule</span></code> - A submodule is present in the git repository but was not specified in
+the source configuration and was not disabled for checkout.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git:invalid-submodule</span></code> - A submodule is specified in the source configuration but does not exist
+in the repository.</p></li>
+</ul>
+<p>This plugin also utilises the following configurable
+<a class="reference external" href="https://docs.buildstream.build/master/buildstream.types.html#buildstream.types.CoreWarnings">core warnings</a>:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.buildstream.build/master/buildstream.types.html#buildstream.types.CoreWarnings.REF_NOT_IN_TRACK">ref-not-in-track</a> -
+The provided ref was not found in the provided track in the element’s git repository.</p></li>
+</ul>
+</section>
+<section id="reporting-sourceinfo">
+<h3>Reporting <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfo">SourceInfo</a><a class="headerlink" href="#reporting-sourceinfo" title="Link to this heading"></a></h3>
+<p>The git source reports the URL of the git repository as the <em>url</em>.</p>
+<p>Further, the git source reports the <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceInfoMedium.GIT">SourceInfoMedium.GIT</a>
+<em>medium</em> and the <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.source.SourceVersionType.COMMIT">SourceVersionType.COMMIT</a>
+<em>version_type</em>, for which it reports the git commit sha as the <em>version</em>.</p>
+<p>If the ref is found to be in <code class="docutils literal notranslate"><span class="pre">git-describe</span></code> format, an attempt to guess the version based on the
+git tag portion of the ref will be made for the reporting of the <em>guess_version</em>. Control over how
+the guess is made or overridden is controlled based on the <code class="docutils literal notranslate"><span class="pre">version-guess-pattern</span></code> and <code class="docutils literal notranslate"><span class="pre">version</span></code>
+configuration attributes described above.</p>
+<p>In order to understand how the <code class="docutils literal notranslate"><span class="pre">version-guess-pattern</span></code> works, please refer to the documentation
+for <a class="reference external" href="https://docs.buildstream.build/master/buildstream.source.html#buildstream.utils.guess_version">utils.guess_version()</a></p>
+<p>In the case that a git describe string represents a commit that is beyond the tag portion
+of the git describe reference (i.e. the version is not exact), then the number of commits
+found beyond the tag will be reported in the <code class="docutils literal notranslate"><span class="pre">commit-offset</span></code> field of the <em>extra_data</em>.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>SourceInfo is <strong>not</strong> reported for submodules.</p>
+<p>This is due to the limitation that the git plugin requires to have the toplevel
+module fetched first in order to have knowledge of the commits of the submodules.</p>
+<p>While this does not provide <em>complete</em> information on the provenance of sources,
+at least one can consider the module to be a comprehensive whole, and the versions
+of submodules are deterministically controlled by the version of the main repository.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="docker.html" class="btn btn-neutral float-left" title="docker plugin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="patch.html" class="btn btn-neutral float-right" title="patch plugin" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, The Apache Software Foundation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
