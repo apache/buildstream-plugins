@@ -620,7 +620,19 @@ class DockerSource(Source):
 
                 self._verify_blob(blob_path, expected_digest=layer_digest)
 
-                members_dict, whiteout_paths = self._get_members_and_whiteout_paths(blob_path)
+                members_dict, whiteout_paths, opaque_whiteout_dirs = self._get_members_and_whiteout_paths(blob_path)
+
+                # Process opaque whiteouts: remove members under the corresponding directories from previous layers
+                for _, prev_members_dict in layer_members:
+                    members_to_remove = []
+                    for member_path in prev_members_dict:
+                        # Check if this member should be removed by any opaque whiteout
+                        for opaque_whiteout_dir in opaque_whiteout_dirs:
+                            if member_path.startswith(opaque_whiteout_dir):
+                                members_to_remove.append(member_path)
+                                break
+                    for member_path in members_to_remove:
+                        del prev_members_dict[member_path]
 
                 # Process whiteouts: remove corresponding members from previous layers
                 for _, prev_members_dict in layer_members:
@@ -679,9 +691,10 @@ class DockerSource(Source):
         """Return the set of files to remove and extract for a given layer
 
         :param layer_tar_path: The path to the layer tar.gz file
-        :return: Tuple of (members_dict, whiteout_paths)
+        :return: Tuple of (members_dict, whiteout_paths, opaque_whiteout_dirs)
           - members_dict: OrderedDict of TarInfo members to extract into staging directory
           - whiteout_paths: list of file paths that should be removed from previous layers
+          - opaque_whiteout_dirs: list of directory paths whose contents should be removed from previous layers
 
         """
 
@@ -707,15 +720,24 @@ class DockerSource(Source):
         with tarfile.open(layer_tar_path, tarinfo=ReadableTarInfo) as tar:
             members_dict = OrderedDict()
             whiteout_paths = []
+            opaque_whiteout_dirs = []
 
             for member in tar.getmembers():
-                if os.path.basename(member.name).startswith(".wh."):
+                member_basename = os.path.basename(member.name)
+                if member_basename == ".wh..wh..opq":
+                    # Opaque whiteout file
+                    opaque_whiteout_dir = os.path.dirname(member.name)
+                    if opaque_whiteout_dir != "":
+                        # Add "/" to facilitate path prefix matching
+                        opaque_whiteout_dir += "/"
+                    opaque_whiteout_dirs.append(opaque_whiteout_dir)
+                elif member_basename.startswith(".wh."):
                     # Whiteout file
                     whiteout_paths.append(strip_wh(member.name))
                 elif is_regular_file(member):
                     members_dict[member.name] = member
 
-        return members_dict, whiteout_paths
+        return members_dict, whiteout_paths, opaque_whiteout_dirs
 
     # Assert that a tarfile is safe to extract; specifically, make
     # sure that we don't do anything outside of the target
