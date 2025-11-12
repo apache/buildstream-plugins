@@ -677,7 +677,7 @@ class DockerSource(Source):
             """
             # whiteout files have the syntax of `*/.wh.*`
             file_name = os.path.basename(white_out_file)
-            path = os.path.join(os.path.dirname(white_out_file), file_name.split(".wh.")[1])
+            path = os.path.join(os.path.dirname(white_out_file), file_name.split(".wh.", maxsplit=1)[1])
             return path
 
         def is_regular_file(info):
