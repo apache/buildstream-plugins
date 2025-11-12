@@ -688,7 +688,7 @@ class DockerSource(Source):
             """
             return not (info.name.startswith("dev/") or info.isdev())
 
-        with tarfile.open(layer_tar_path) as tar:
+        with tarfile.open(layer_tar_path, tarinfo=ReadableTarInfo) as tar:
             extract_fileset = []
             delete_fileset = []
             for member in tar.getmembers():
