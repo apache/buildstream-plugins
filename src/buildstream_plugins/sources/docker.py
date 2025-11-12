@@ -115,6 +115,7 @@ from buildstream.utils import (
     sha256sum,
     link_files,
     move_atomic,
+    get_umask,
 )
 
 #
@@ -363,23 +364,26 @@ class DockerRegistryV2Client:
 
 class ReadableTarInfo(tarfile.TarInfo):
     """
-    The goal is to override`TarFile`'s `extractall` semantics by ensuring that on extraction, the
-    files are readable by the owner of the file. This is done by over-riding the accessor for the
-    mode` attribute in `TarInfo`, class that encapsulates the internal meta-data of the tarball,
+    The goal is to override `TarFile`'s `extractall` semantics by ensuring that on extraction, the
+    files are readable by the owner of the file. This is done by overriding the accessor for the
+    `mode` attribute in `TarInfo`, the class that encapsulates the internal meta-data of the tarball,
     so that the owner-read bit is always set.
     """
 
-    # The mode attribute is not declared as a property and so
-    # this trips up the static type checker, mark this as "ignore"
-    #
+    # https://github.com/python/mypy/issues/4125
     @property  # type: ignore
     def mode(self):
-        # ensure file is readable by owner
-        return self.__permission | 0o400
+        # Respect umask instead of the file mode stored in the archive.
+        # The only bit used from the embedded mode is the executable bit for files.
+        umask = get_umask()
+        if self.isdir() or bool(self.__permission & 0o100):
+            return 0o777 & ~umask
+        else:
+            return 0o666 & ~umask
 
     @mode.setter
     def mode(self, permission):
-        self.__permission = permission
+        self.__permission = permission  # pylint: disable=attribute-defined-outside-init
 
 
 class DockerSource(Source):
