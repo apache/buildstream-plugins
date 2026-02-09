@@ -74,6 +74,10 @@ Further, the cargo source reports the `SourceInfoMedium.REMOTE_FILE
 *version_type*, for which it reports the checksum of the archive as the *version*.
 
 The versions extracted from the Cargo.lock at tracking time are used to report the *guess_version*.
+
+Additional source info can be specified using the `provenance` field for each referenced crate as per
+`built-in source provenance documentation
+<https://docs.buildstream.build/master/buildstream.source.html#built-in-functionality>`_.
 """
 
 import json
@@ -125,13 +129,14 @@ _default_vendor_config_template = (
 #    sha (str|None): The sha256 checksum of the downloaded crate
 #
 class Crate(SourceFetcher):
-    def __init__(self, cargo, name, version, sha=None):
+    def __init__(self, cargo, name, version, sha=None, provenance=None):
         super().__init__()
 
         self.cargo = cargo
         self.name = name
         self.version = str(version)
         self.sha = sha
+        self.provenance = provenance
         self.mark_download_url(cargo.url)
 
     ########################################################
@@ -159,7 +164,12 @@ class Crate(SourceFetcher):
     def get_source_info(self):
         url, _ = self._get_url()
         return self.cargo.create_source_info(
-            url, SourceInfoMedium.REMOTE_FILE, SourceVersionType.SHA256, self.sha, version_guess=self.version
+            url,
+            SourceInfoMedium.REMOTE_FILE,
+            SourceVersionType.SHA256,
+            self.sha,
+            version_guess=self.version,
+            provenance_node=self.provenance,
         )
 
     ########################################################
@@ -368,16 +378,29 @@ class CargoSource(Source):
     # We need the Cargo.lock file to construct our ref at track time
     BST_REQUIRES_PREVIOUS_SOURCES_TRACK = True
 
+    BST_CUSTOM_SOURCE_PROVENANCE = True
+
     ########################################################
     #       Plugin/Source API method implementations       #
     ########################################################
     def configure(self, node):
-
         # The url before any aliasing
         #
         self.original_url = node.get_str("url", "https://static.crates.io/crates")
         self.cargo_lock = node.get_str("cargo-lock", "Cargo.lock")
         self.vendor_dir = node.get_str("vendor-dir", "crates")
+        self.provenance = {}
+
+        # Because source provenance info lives in the ref it would be
+        # removed upon source track, create a backup here so it is
+        # available to be added back in when setting the ref
+        ref = node.get_sequence("ref", None)
+        if ref is not None:
+            for crate in ref:
+                if "provenance" in crate:
+                    crate_name = crate.get_str("name")
+                    provenance = crate.get_mapping("provenance")
+                    self.provenance[crate_name] = provenance.strip_node_info()
 
         # If the specified URL is just an alias, require the alias to resolve
         # to a URL with a trailing slash. Otherwise, append a trailing slash if
@@ -413,6 +436,14 @@ class CargoSource(Source):
         return self.ref
 
     def set_ref(self, ref, node):
+        def add_provenance(crate):
+            if crate["name"] in self.provenance:
+                crate["provenance"] = self.provenance[crate["name"]]
+            return crate
+
+        # add provenance back in
+        ref = list(map(add_provenance, ref))
+
         node["ref"] = ref
         self._recompute_crates(node.get_sequence("ref"))
 
@@ -513,6 +544,7 @@ class CargoSource(Source):
                 crate.get_str("name"),
                 crate.get_str("version"),
                 sha=crate.get_str("sha", None),
+                provenance=crate.get_mapping("provenance", None),
             )
             for crate in refs
         ]
