@@ -1,4 +1,14 @@
 =========================
+buildstream-plugins 2.7.0
+=========================
+
+ o cargo: Support source provenance (#98)
+
+ o Fix multiple issues in the Docker source plugin (#96)
+
+ o Support Python 3.14 and drop support for Python 3.9 (#94, #97)
+
+=========================
 buildstream-plugins 2.5.0
 =========================
 
