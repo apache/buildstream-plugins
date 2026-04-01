@@ -1,0 +1,4 @@
+autotools plugin
+============================================
+
+.. automodule:: elements.autotools

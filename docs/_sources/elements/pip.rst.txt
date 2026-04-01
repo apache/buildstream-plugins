@@ -1,0 +1,4 @@
+pip plugin
+============================================
+
+.. automodule:: elements.pip

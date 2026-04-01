@@ -1,0 +1,4 @@
+gitlab_lfs_mirror plugin
+============================================
+
+.. automodule:: sourcemirrors.gitlab_lfs_mirror

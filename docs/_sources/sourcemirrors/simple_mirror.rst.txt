@@ -1,0 +1,4 @@
+simple_mirror plugin
+============================================
+
+.. automodule:: sourcemirrors.simple_mirror

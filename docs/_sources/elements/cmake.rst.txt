@@ -1,0 +1,4 @@
+cmake plugin
+============================================
+
+.. automodule:: elements.cmake
