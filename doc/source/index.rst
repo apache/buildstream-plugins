@@ -18,8 +18,11 @@ BuildStream Plugins Documentation
 =================================
 This is a collection of plugins to use with Buildstream.
 
-To these plugins in your project, follow the
-`plugin loading documentation <https://docs.buildstream.build/master/format_project.html#loading-plugins>`_.
+To use these plugins in your project, can install them though 
+`pip <https://pypi.org/project/buildstream-plugins/>`_.
+Then, follow the
+`plugin loading documentation <https://docs.buildstream.build/master/format_project.html#loading-plugins>`_
+so your project can utilize them.
 
 .. toctree::
    :maxdepth: 1
