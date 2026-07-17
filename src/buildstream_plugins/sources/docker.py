@@ -21,8 +21,8 @@
 #
 
 """
-docker - stage files from Docker images
-=======================================
+docker - stage files from Docker/OCI images
+===========================================
 
 **Usage:**
 
@@ -282,6 +282,8 @@ class DockerRegistryV2Client:
         accept_types = [
             "application/vnd.docker.distribution.manifest.v2+json",
             "application/vnd.docker.distribution.manifest.list.v2+json",
+            "application/vnd.oci.image.index.v1+json",
+            "application/vnd.oci.image.manifest.v1+json",
         ]
 
         manifest_url = urljoin(image_path, "manifests", urllib.parse.quote(reference))
@@ -319,7 +321,10 @@ class DockerRegistryV2Client:
                 manifest=response.text,
             )
 
-        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.list.v2+json":
+        if manifest["mediaType"] in (
+            "application/vnd.docker.distribution.manifest.list.v2+json",
+            "application/vnd.oci.image.index.v1+json",
+        ):
             # This is a "fat manifest", we need to narrow down to a specific
             # architecture.
             for sub in manifest["manifests"]:
@@ -335,7 +340,10 @@ class DockerRegistryV2Client:
                 "No images found for architecture {}, OS {}".format(architecture, os_),
                 manifest=response.text,
             )
-        if manifest["mediaType"] == "application/vnd.docker.distribution.manifest.v2+json":
+        if manifest["mediaType"] in (
+            "application/vnd.docker.distribution.manifest.v2+json",
+            "application/vnd.oci.image.manifest.v1+json",
+        ):
             return response.text, our_digest
         else:
             raise DockerManifestError(
@@ -576,7 +584,10 @@ class DockerSource(Source):
                     raise SourceError(e) from e
 
                 for layer in manifest["layers"]:
-                    if layer["mediaType"] != "application/vnd.docker.image.rootfs.diff.tar.gzip":
+                    if layer["mediaType"] not in (
+                        "application/vnd.docker.image.rootfs.diff.tar.gzip",
+                        "application/vnd.oci.image.layer.v1.tar+gzip",
+                    ):
                         raise SourceError("Unsupported layer type: {}".format(layer["mediaType"]))
 
                     layer_digest = layer["digest"]
