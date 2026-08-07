@@ -15,4 +15,4 @@
 #
 # Remember to adjust this version number before tagging releases
 #
-__version__ = "2.7.0"
+__version__ = "2.8.0.dev0"
