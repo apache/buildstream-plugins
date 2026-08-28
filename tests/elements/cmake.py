@@ -79,9 +79,6 @@ def test_cmake_run(cli, datafiles):
     result = cli.run(project=project, args=["shell", element_name, "/usr/bin/hello"])
     assert result.exit_code == 0
 
-    assert (
-        result.output
-        == """Hello World!
+    assert result.output == """Hello World!
 This is hello.
 """
-    )
