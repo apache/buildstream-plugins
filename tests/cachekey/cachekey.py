@@ -8,7 +8,6 @@ from buildstream._testing._cachekeys import check_cache_key_stability
 from buildstream._testing.runcli import cli  # pylint: disable=unused-import
 from buildstream._testing._utils.site import HAVE_BZR, HAVE_GIT, IS_LINUX, MACHINE_ARCH
 
-
 # Project directory
 DATA_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),

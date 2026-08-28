@@ -28,7 +28,6 @@ from buildstream._testing._utils.site import HAVE_SANDBOX
 
 from tests.testutils.python_repo import setup_pypi_repo  # pylint: disable=unused-import
 
-
 pytestmark = pytest.mark.integration
 
 

@@ -41,7 +41,6 @@ with open(
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from buildstream_plugins import __version__  # pylint: disable=wrong-import-position
 
-
 setup(
     name="buildstream-plugins",
     version=__version__,
