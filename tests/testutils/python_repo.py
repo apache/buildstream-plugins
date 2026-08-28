@@ -144,5 +144,37 @@ def setup_pypi_repo(tmpdir):
             )
             for dependency, dependency_dependencies in dependencies.items():
                 add_packages({dependency: dependency_dependencies}, pypi_repo)
+        _add_setuptools(pypi_repo)
 
     return add_packages
+
+
+def _add_setuptools(pypi_repo):
+    # pip 25 isolate-builds sdists and resolves setuptools from --index-url.
+    # --no-binary :all: is inherited, so this must be an sdist.
+    dest = os.path.join(pypi_repo, "setuptools")
+    if os.path.isdir(dest) and os.listdir(dest):
+        return
+    os.makedirs(dest, exist_ok=True)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "download",
+            "setuptools>=40.8.0",
+            "--dest",
+            dest,
+            "--no-deps",
+            "--no-binary",
+            ":all:",
+        ],
+        check=True,
+    )
+    links = "".join(
+        HTML_LINK_TEMPLATE.format(dist=name)
+        for name in sorted(os.listdir(dest))
+        if name != "index.html"
+    )
+    with open(os.path.join(dest, "index.html"), "w", encoding="utf-8") as handle:
+        handle.write(HTML_TEMPLATE.format(name="setuptools", links=links))
