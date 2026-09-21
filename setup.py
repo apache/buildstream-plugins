@@ -98,6 +98,7 @@ setup(
     },
     extras_require={
         "cargo": ['tomli; python_version < "3.11"'],
+        "docker": ["requests"],
     },
     zip_safe=False,
 )
