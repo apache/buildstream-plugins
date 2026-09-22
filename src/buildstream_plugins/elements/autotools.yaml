@@ -79,17 +79,17 @@ variables:
   remove-libtool-libraries: "false"
 
   delete-libtool-archives: |
-    if %{remove-libtool-modules} || %{remove-libtool-libraries}; then
-      find "%{install-root}" -name "*.la" -print0 | while read -d '' -r file; do
-        if grep '^shouldnotlink=yes$' "${file}" &>/dev/null; then
-          if %{remove-libtool-modules}; then
+    if [ "%{remove-libtool-modules}" = "true" ] || [ "%{remove-libtool-libraries}" = "true" ]; then
+      find "%{install-root}" -name "*.la" | while IFS= read -r file; do
+        if grep '^shouldnotlink=yes$' "${file}" >/dev/null 2>&1; then
+          if [ "%{remove-libtool-modules}" = "true" ]; then
             echo "Removing ${file}."
             rm "${file}"
           else
             echo "Not removing ${file}."
           fi
         else
-          if %{remove-libtool-libraries}; then
+          if [ "%{remove-libtool-libraries}" = "true" ]; then
             echo "Removing ${file}."
             rm "${file}"
           else
