@@ -14,7 +14,7 @@ jobs:
       run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       # BuildStream requires tags to be able to find its version.
       with:
         fetch-depth: 0
@@ -56,7 +56,7 @@ jobs:
         path: docs
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       with:
         ref: gh-pages
         path: pages
