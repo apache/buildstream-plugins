@@ -1,0 +1,4 @@
+setuptools plugin
+============================================
+
+.. automodule:: elements.setuptools

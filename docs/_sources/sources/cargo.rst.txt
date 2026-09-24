@@ -1,0 +1,4 @@
+cargo plugin
+============================================
+
+.. automodule:: sources.cargo
