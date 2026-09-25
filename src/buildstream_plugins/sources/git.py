@@ -1076,7 +1076,11 @@ class GitSource(Source):
         commit_sha = None
 
         string = self.mirror.ref
-
+        if string is None:
+            # An untracked source has no ref to guess from: the "sha"
+            # cannot be discovered, so honor the documented contract
+            # ("either None or strings") instead of crashing on None.
+            return (None, version_guess, commits)
         main_split = string.rsplit("-g", 1)
         if len(main_split) < 2:
             # Didn't find the `-g`, assume its a raw git sha as input
@@ -1097,6 +1101,8 @@ class GitSource(Source):
         return (commit_sha, version_guess, commits)
 
     def collect_source_info(self):
+        if self.mirror.ref is None:
+            return []
         extra_data = None
         commit_sha, version_guess, commits = self._guess_version()
         if commits:

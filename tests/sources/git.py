@@ -1243,3 +1243,22 @@ def test_source_info(
         commit_offset = None
 
     assert commit_offset == expected_offset
+
+
+@pytest.mark.skipif(HAVE_GIT is False, reason="git is not available")
+@pytest.mark.datafiles(os.path.join(DATA_DIR, "template"))
+def test_source_info_untracked_source(cli, tmpdir, datafiles):
+    project = str(datafiles)
+
+    # Create the repo, but never track the element: the source
+    # is valid (has a track) yet has no ref.
+    repo = create_repo("git", str(tmpdir))
+    repo.create(os.path.join(project, "repofiles"))
+
+    # Write out our test target with track and NO ref
+    element = {"kind": "import", "sources": [repo.source_config(ref=None)]}
+    generate_element(project, "target.bst", element)
+
+    # `bst show` with %{source-info} must not crash on the untracked source
+    result = cli.run(project=project, args=["show", "--format", "%{name}:\n%{source-info}", "target.bst"])
+    result.assert_success()
