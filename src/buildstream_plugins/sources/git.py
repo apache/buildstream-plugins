@@ -208,10 +208,12 @@ found beyond the tag will be reported in the ``commit-offset`` field of the *ext
 """
 
 import os
+import posixpath
 import re
 import shutil
 from io import StringIO
 from tempfile import TemporaryFile
+from urllib.parse import urlsplit, urlunsplit
 
 from configparser import RawConfigParser
 
@@ -246,6 +248,15 @@ class _RefFormat(FastEnum):
 
 def _strip_tag(rev):
     return rev.split("-g")[-1]
+
+
+def _resolve_submodule_url(parent_url, url):
+    if not url.startswith(("./", "../")):
+        return url
+
+    parent = urlsplit(parent_url)
+    path = posixpath.normpath(posixpath.join(parent.path, url))
+    return urlunsplit(parent._replace(path=path))
 
 
 # This class represents a single Git repository. The Git source needs to account for
@@ -559,6 +570,7 @@ class GitMirror(SourceFetcher):
     #
     def get_submodule_mirrors(self):
         for path, url in self.submodule_list():
+            url = _resolve_submodule_url(self.source.translate_url(self.url, primary=self.primary), url)
             ref = self.submodule_ref(path)
             if ref is not None:
                 mirror = self.__class__(self.source, os.path.join(self.path, path), url, ref)

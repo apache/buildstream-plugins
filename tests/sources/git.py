@@ -34,11 +34,30 @@ from buildstream._testing import create_repo
 from buildstream import _yaml
 
 from tests.testutils.site import HAVE_GIT, HAVE_OLD_GIT
+from buildstream_plugins.sources.git import _resolve_submodule_url
 
 DATA_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "git",
 )
+
+
+@pytest.mark.parametrize(
+    "parent, url, expected",
+    [
+        (
+            "https://invent.kde.org/qt/qt/qtwebengine.git",
+            "../qtwebengine-chromium.git",
+            "https://invent.kde.org/qt/qt/qtwebengine-chromium.git",
+        ),
+        ("kde:qt/qt/qtwebengine.git", "../qtwebengine-chromium.git", "kde:qt/qt/qtwebengine-chromium.git"),
+        ("kde:qt/qt/qtwebengine.git", "./child.git", "kde:qt/qt/qtwebengine.git/child.git"),
+        ("kde:qt/qt/qtwebengine.git", "../../other.git", "kde:qt/other.git"),
+        ("kde:qt/qt/qtwebengine.git", "https://example.org/other.git", "https://example.org/other.git"),
+    ],
+)
+def test_resolve_submodule_url(parent, url, expected):
+    assert _resolve_submodule_url(parent, url) == expected
 
 
 def generate_project_with_git(project, config):
@@ -95,7 +114,8 @@ def test_fetch_shallow(cli, tmpdir, datafiles):
 
 @pytest.mark.skipif(HAVE_GIT is False, reason="git is not available")
 @pytest.mark.datafiles(os.path.join(DATA_DIR, "template"))
-def test_submodule_fetch_checkout(cli, tmpdir, datafiles):
+@pytest.mark.parametrize("relative", [False, True])
+def test_submodule_fetch_checkout(cli, tmpdir, datafiles, relative):
     project = str(datafiles)
     checkoutdir = os.path.join(str(tmpdir), "checkout")
 
@@ -108,10 +128,13 @@ def test_submodule_fetch_checkout(cli, tmpdir, datafiles):
     repo.create(os.path.join(project, "repofiles"))
 
     # Add a submodule pointing to the one we created
-    ref = repo.add_submodule("subdir", "file://" + subrepo.repo)
+    ref = repo.add_submodule("subdir", "../subrepo" if relative else "file://" + subrepo.repo)
 
     # Write out our test target
-    element = {"kind": "import", "sources": [repo.source_config(ref=ref)]}
+    source = repo.source_config(ref=ref)
+    # Exercise discovery from .gitmodules rather than the test helper's URL overrides.
+    source.pop("submodules", None)
+    element = {"kind": "import", "sources": [source]}
     generate_element(project, "target.bst", element)
 
     # Fetch, build, checkout
@@ -129,7 +152,8 @@ def test_submodule_fetch_checkout(cli, tmpdir, datafiles):
 
 @pytest.mark.skipif(HAVE_GIT is False, reason="git is not available")
 @pytest.mark.datafiles(os.path.join(DATA_DIR, "template"))
-def test_recursive_submodule_fetch_checkout(cli, tmpdir, datafiles):
+@pytest.mark.parametrize("relative", [False, True])
+def test_recursive_submodule_fetch_checkout(cli, tmpdir, datafiles, relative):
     project = str(datafiles)
     checkoutdir = os.path.join(str(tmpdir), "checkout")
 
@@ -146,11 +170,14 @@ def test_recursive_submodule_fetch_checkout(cli, tmpdir, datafiles):
     repo.create(os.path.join(project, "repofiles"))
 
     # Configure submodules
-    subrepo.add_submodule("subdir", "file://" + subsubrepo.repo)
-    ref = repo.add_submodule("subdir", "file://" + subrepo.repo)
+    subrepo.add_submodule("subdir", "../subsubrepo" if relative else "file://" + subsubrepo.repo)
+    ref = repo.add_submodule("subdir", "../subrepo" if relative else "file://" + subrepo.repo)
 
     # Write out our test target
-    element = {"kind": "import", "sources": [repo.source_config(ref=ref)]}
+    source = repo.source_config(ref=ref)
+    # Exercise discovery from .gitmodules rather than the test helper's URL overrides.
+    source.pop("submodules", None)
+    element = {"kind": "import", "sources": [source]}
     generate_element(project, "target.bst", element)
 
     # Fetch, build, checkout
